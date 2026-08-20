@@ -1,7 +1,16 @@
--- CalendarioGym - migracion a planes semanales
+-- CalendarioGym - migracion completa a planes semanales
 -- Ejecutar una sola vez en el SQL Editor de Supabase.
--- Conserva ejercicios existentes, convierte week_start_date en planes,
--- migra rest_seconds a rest_minutes y actualiza RLS.
+--
+-- Incluye:
+-- - workout_plans
+-- - color por plan
+-- - exercises.plan_id
+-- - exercises.rest_minutes
+-- - exercises.completed
+-- - conversion de week_start_date a planes
+-- - conversion de rest_seconds a rest_minutes
+-- - triggers updated_at
+-- - RLS y policies
 
 create extension if not exists pgcrypto;
 
@@ -11,9 +20,7 @@ create table if not exists public.workout_plans (
   name text not null,
   color text not null default 'teal',
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  constraint workout_plans_color_chk
-    check (color in ('blue', 'red', 'green', 'teal', 'purple', 'amber'))
+  updated_at timestamptz not null default now()
 );
 
 alter table public.workout_plans
@@ -38,41 +45,80 @@ alter table public.exercises
 alter table public.exercises
   add column if not exists completed boolean not null default false;
 
-update public.exercises
-set rest_minutes = round((rest_seconds::numeric / 60), 2)
-where rest_minutes is null
-  and rest_seconds is not null;
-
-with source_weeks as (
-  select distinct
-    user_id,
-    coalesce(week_start_date, created_at::date) as source_date
-  from public.exercises
-  where plan_id is null
-),
-created_plans as (
-  insert into public.workout_plans (user_id, name, created_at, updated_at)
-  select
-    source_weeks.user_id,
-    'Plan semanal ' || source_weeks.source_date::text,
-    now(),
-    now()
-  from source_weeks
-  where not exists (
+do $$
+begin
+  if exists (
     select 1
-    from public.workout_plans existing
-    where existing.user_id = source_weeks.user_id
-      and existing.name = 'Plan semanal ' || source_weeks.source_date::text
-  )
-  returning id, user_id, name
-)
-update public.exercises
-set plan_id = workout_plans.id
-from public.workout_plans
-where public.exercises.plan_id is null
-  and workout_plans.user_id = public.exercises.user_id
-  and workout_plans.name = 'Plan semanal ' ||
-    coalesce(public.exercises.week_start_date, public.exercises.created_at::date)::text;
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'exercises'
+      and column_name = 'rest_seconds'
+  ) then
+    update public.exercises
+    set rest_minutes = round((rest_seconds::numeric / 60), 2)
+    where rest_minutes is null
+      and rest_seconds is not null;
+  end if;
+end;
+$$;
+
+do $$
+begin
+  if exists (
+    select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'exercises'
+      and column_name = 'week_start_date'
+  ) then
+    insert into public.workout_plans (user_id, name, created_at, updated_at)
+    select distinct
+      exercises.user_id,
+      'Plan semanal ' || coalesce(exercises.week_start_date, exercises.created_at::date)::text,
+      now(),
+      now()
+    from public.exercises
+    where exercises.plan_id is null
+      and not exists (
+        select 1
+        from public.workout_plans existing
+        where existing.user_id = exercises.user_id
+          and existing.name =
+            'Plan semanal ' || coalesce(exercises.week_start_date, exercises.created_at::date)::text
+      );
+
+    update public.exercises
+    set plan_id = workout_plans.id
+    from public.workout_plans
+    where public.exercises.plan_id is null
+      and workout_plans.user_id = public.exercises.user_id
+      and workout_plans.name =
+        'Plan semanal ' || coalesce(public.exercises.week_start_date, public.exercises.created_at::date)::text;
+  end if;
+end;
+$$;
+
+do $$
+declare
+  user_record record;
+  new_plan_id uuid;
+begin
+  for user_record in
+    select distinct user_id
+    from public.exercises
+    where plan_id is null
+  loop
+    insert into public.workout_plans (user_id, name, color)
+    values (user_record.user_id, 'Entrenamiento actual', 'teal')
+    returning id into new_plan_id;
+
+    update public.exercises
+    set plan_id = new_plan_id
+    where user_id = user_record.user_id
+      and plan_id is null;
+  end loop;
+end;
+$$;
 
 alter table public.exercises
   alter column plan_id set not null;
