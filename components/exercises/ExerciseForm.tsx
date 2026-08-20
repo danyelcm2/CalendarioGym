@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { Field, TextArea } from "@/components/ui/Field";
+import { formatWeightInput } from "@/lib/utils/weights";
 import type { Exercise, ExerciseInput } from "@/types/exercise";
 
 type ExerciseFormProps = {
@@ -38,11 +39,11 @@ export function ExerciseForm({ exercise, onSubmit, onCancel }: ExerciseFormProps
       name: name.trim(),
       sets: Number(sets),
       reps: reps.trim(),
-      weight: weight.trim() || null,
+      weight: formatWeightInput(weight),
       rest_minutes: restMinutes ? Number(restMinutes) : null,
       dropset_enabled: dropsetEnabled,
       dropset_reps: dropsetEnabled ? dropsetReps.trim() || null : null,
-      dropset_weight: dropsetEnabled ? dropsetWeight.trim() || null : null,
+      dropset_weight: dropsetEnabled ? formatWeightInput(dropsetWeight) : null,
       notes: notes.trim() || null,
     });
 
@@ -80,10 +81,10 @@ export function ExerciseForm({ exercise, onSubmit, onCancel }: ExerciseFormProps
         />
         <Field
           id="weight"
-          label="Peso opcional"
+          label="Peso opcional (LB)"
           value={weight}
           onChange={(event) => setWeight(event.target.value)}
-          placeholder="60 kg"
+          placeholder="60"
         />
         <Field
           id="rest"
@@ -125,10 +126,10 @@ export function ExerciseForm({ exercise, onSubmit, onCancel }: ExerciseFormProps
             />
             <Field
               id="dropset-weight"
-              label="Peso dropset"
+              label="Peso dropset (LB)"
               value={dropsetWeight}
               onChange={(event) => setDropsetWeight(event.target.value)}
-              placeholder="45 kg"
+              placeholder="45"
             />
           </div>
         ) : null}

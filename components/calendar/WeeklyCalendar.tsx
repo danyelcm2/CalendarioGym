@@ -29,6 +29,7 @@ import {
   isDayOfWeek,
   type ExerciseGroups,
 } from "@/lib/utils/exercises";
+import { formatWeightLabel } from "@/lib/utils/weights";
 import { WEEK_DAYS, type DayOfWeek, type Exercise, type ExerciseInput } from "@/types/exercise";
 
 type WeeklyCalendarProps = {
@@ -43,6 +44,24 @@ type ModalState =
   | { mode: "create"; day: DayOfWeek; exercise: null }
   | { mode: "edit"; day: DayOfWeek; exercise: Exercise }
   | null;
+
+function getExercisePrintSummary(exercise: Exercise) {
+  const weightLabel = formatWeightLabel(exercise.weight);
+  const dropsetWeightLabel = formatWeightLabel(exercise.dropset_weight);
+
+  return [
+    `${exercise.sets} x ${exercise.reps}`,
+    weightLabel,
+    exercise.rest_minutes ? `${exercise.rest_minutes} min` : null,
+    exercise.dropset_enabled
+      ? `Dropset ${exercise.dropset_reps || "--"} reps${
+          dropsetWeightLabel ? ` ${dropsetWeightLabel}` : ""
+        }`
+      : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
 
 export function WeeklyCalendar({
   userId,
@@ -544,16 +563,7 @@ export function WeeklyCalendar({
                       {exercise.completed ? "[x] " : ""}
                       {exercise.name}
                     </h3>
-                    <p>
-                      {exercise.sets} x {exercise.reps}
-                      {exercise.weight ? ` · ${exercise.weight}` : ""}
-                      {exercise.rest_minutes
-                        ? ` · ${exercise.rest_minutes} min`
-                        : ""}
-                      {exercise.dropset_enabled
-                        ? ` · Dropset ${exercise.dropset_reps || "--"} reps${exercise.dropset_weight ? ` ${exercise.dropset_weight}` : ""}`
-                        : ""}
-                    </p>
+                    <p>{getExercisePrintSummary(exercise)}</p>
                     {exercise.notes ? <p>{exercise.notes}</p> : null}
                   </article>
                 ))

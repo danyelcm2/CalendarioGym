@@ -4,6 +4,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { useSortable } from "@dnd-kit/sortable";
 import { Check, GripVertical, Pencil, Trash2 } from "lucide-react";
 
+import { formatWeightLabel } from "@/lib/utils/weights";
 import type { Exercise } from "@/types/exercise";
 
 type ExerciseCardProps = {
@@ -19,6 +20,9 @@ export function ExerciseCard({
   onDelete,
   onToggleComplete,
 }: ExerciseCardProps) {
+  const weightLabel = formatWeightLabel(exercise.weight);
+  const dropsetWeightLabel = formatWeightLabel(exercise.dropset_weight);
+
   const {
     attributes,
     listeners,
@@ -90,9 +94,9 @@ export function ExerciseCard({
             {exercise.sets} series x {exercise.reps} repeticiones
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
-            {exercise.weight ? (
+            {weightLabel ? (
               <span className="rounded-full bg-[#edf7f5] px-2.5 py-1 text-xs font-medium text-[#2b7266] dark:bg-[#17322b] dark:text-[#a6f2df]">
-                {exercise.weight}
+                {weightLabel}
               </span>
             ) : null}
             {exercise.rest_minutes ? (
@@ -109,9 +113,7 @@ export function ExerciseCard({
           {exercise.dropset_enabled ? (
             <p className="mt-3 rounded-2xl bg-[#fff8f8] px-3 py-2 text-xs leading-5 text-[#8f2d3d] dark:bg-[#251416] dark:text-[#fda4af]">
               Continua con {exercise.dropset_reps || "--"} reps
-              {exercise.dropset_weight
-                ? ` · ${exercise.dropset_weight}`
-                : ""}
+              {dropsetWeightLabel ? ` · ${dropsetWeightLabel}` : ""}
             </p>
           ) : null}
           {exercise.notes ? (

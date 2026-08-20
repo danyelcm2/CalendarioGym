@@ -312,12 +312,12 @@ export function PlansDashboard({ userId }: PlansDashboardProps) {
                   {record.name}
                 </p>
                 <p className="mt-2 text-2xl font-semibold text-[#17201a] dark:text-[#f7fbf6]">
-                  {record.weight ? `${record.weight} kg` : "PR"}
+                  {record.weight ? `${record.weight} LB` : "PR"}
                 </p>
                 <p className="mt-1 text-xs text-[#647067] dark:text-[#a8b4aa]">
                   {record.sets} x {record.reps}
                   {record.estimatedMax
-                    ? ` · estimado ${record.estimatedMax.toFixed(1)} kg`
+                    ? ` · estimado ${record.estimatedMax.toFixed(1)} LB`
                     : ""}
                 </p>
               </div>
