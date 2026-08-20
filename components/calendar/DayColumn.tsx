@@ -38,18 +38,20 @@ export function DayColumn({
   return (
     <section
       ref={setNodeRef}
-      className={`flex min-h-[34rem] w-[18.5rem] shrink-0 flex-col rounded-[24px] border p-4 transition md:w-auto ${
+      className={`flex min-h-[calc(100svh-18rem)] w-full min-w-0 flex-col rounded-[22px] border p-3 transition sm:p-4 md:min-h-[30rem] ${
         isOver
           ? "border-[#4f8f7c] bg-[#edf8f5] shadow-[0_18px_50px_rgba(79,143,124,0.16)]"
           : "border-white/80 bg-white/[0.72] shadow-sm"
       }`}
     >
-      <div className="mb-4 flex items-center justify-between gap-3">
+      <div className="mb-3 flex items-center justify-between gap-3 sm:mb-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#7a857d]">
             {day.shortLabel}
           </p>
-          <h2 className="text-lg font-semibold text-[#17201a]">{day.label}</h2>
+          <h2 className="text-lg font-semibold text-[#17201a] sm:text-xl">
+            {day.label}
+          </h2>
         </div>
         <span className="rounded-full bg-[#edf1ec] px-3 py-1 text-xs font-semibold text-[#4d5b50]">
           {exercises.length}
@@ -60,7 +62,7 @@ export function DayColumn({
         items={exercises.map((exercise) => exercise.id)}
         strategy={verticalListSortingStrategy}
       >
-        <div className="flex flex-1 flex-col gap-3">
+        <div className="flex flex-1 flex-col gap-2.5 sm:gap-3">
           {exercises.length > 0 ? (
             exercises.map((exercise) => (
               <ExerciseCard
@@ -71,7 +73,7 @@ export function DayColumn({
               />
             ))
           ) : (
-            <div className="flex min-h-36 flex-1 items-center justify-center rounded-[20px] border border-dashed border-[#cfd8cf] bg-white/[0.46] px-4 text-center text-sm text-[#7a857d]">
+            <div className="flex min-h-40 flex-1 items-center justify-center rounded-[20px] border border-dashed border-[#cfd8cf] bg-white/[0.46] px-4 text-center text-sm text-[#7a857d]">
               Sin ejercicios
             </div>
           )}

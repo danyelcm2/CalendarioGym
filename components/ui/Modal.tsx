@@ -11,10 +11,12 @@ type ModalProps = {
 
 export function Modal({ title, children, onClose }: ModalProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-[#17201a]/[0.35] px-4 py-4 backdrop-blur-sm sm:items-center">
-      <section className="w-full max-w-xl rounded-[26px] border border-white/70 bg-white p-6 shadow-[0_28px_80px_rgba(23,32,26,0.22)]">
-        <div className="mb-5 flex items-center justify-between gap-4">
-          <h2 className="text-xl font-semibold text-[#17201a]">{title}</h2>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-[#17201a]/[0.35] px-2 py-2 backdrop-blur-sm sm:items-center sm:px-4 sm:py-4">
+      <section className="max-h-[calc(100svh-1rem)] w-full max-w-xl overflow-y-auto rounded-[24px] border border-white/70 bg-white p-4 shadow-[0_28px_80px_rgba(23,32,26,0.22)] sm:max-h-[calc(100vh-2rem)] sm:p-6">
+        <div className="mb-4 flex items-center justify-between gap-4 sm:mb-5">
+          <h2 className="text-lg font-semibold text-[#17201a] sm:text-xl">
+            {title}
+          </h2>
           <button
             type="button"
             onClick={onClose}

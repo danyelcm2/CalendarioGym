@@ -40,7 +40,7 @@ export function ExerciseForm({ exercise, onSubmit, onCancel }: ExerciseFormProps
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
       <Field
         id="exercise-name"
         label="Nombre del ejercicio"
@@ -50,7 +50,7 @@ export function ExerciseForm({ exercise, onSubmit, onCancel }: ExerciseFormProps
         required
       />
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
         <Field
           id="sets"
           label="Series"
@@ -95,10 +95,15 @@ export function ExerciseForm({ exercise, onSubmit, onCancel }: ExerciseFormProps
       />
 
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-        <Button type="button" variant="secondary" onClick={onCancel}>
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={onCancel}
+          className="w-full sm:w-auto"
+        >
           Cancelar
         </Button>
-        <Button type="submit" disabled={isSubmitting}>
+        <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
           {isSubmitting ? "Guardando..." : exercise ? "Actualizar" : "Crear"}
         </Button>
       </div>

@@ -9,7 +9,7 @@ type TextAreaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
 };
 
 const fieldClass =
-  "mt-2 w-full rounded-2xl border border-[#d9e0d8] bg-white px-4 py-3 text-sm text-[#17201a] outline-none transition placeholder:text-[#9aa39a] focus:border-[#4f8f7c] focus:ring-4 focus:ring-[#4f8f7c]/[0.15]";
+  "mt-2 min-h-12 w-full rounded-2xl border border-[#d9e0d8] bg-white px-4 py-3 text-base text-[#17201a] outline-none transition placeholder:text-[#9aa39a] focus:border-[#4f8f7c] focus:ring-4 focus:ring-[#4f8f7c]/[0.15] sm:text-sm";
 
 export function Field({ label, id, className = "", ...props }: FieldProps) {
   return (

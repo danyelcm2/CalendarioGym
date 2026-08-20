@@ -44,6 +44,8 @@ export function WeeklyCalendar({ userId }: WeeklyCalendarProps) {
   const [weekStart, setWeekStart] = useState(() => getMonday());
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [modal, setModal] = useState<ModalState>(null);
+  const [selectedMobileDay, setSelectedMobileDay] =
+    useState<DayOfWeek>("monday");
   const [activeExercise, setActiveExercise] = useState<Exercise | null>(null);
   const [status, setStatus] = useState<"idle" | "loading" | "saving">("loading");
   const [notice, setNotice] = useState<string | null>(null);
@@ -319,32 +321,35 @@ export function WeeklyCalendar({ userId }: WeeklyCalendarProps) {
   }
 
   return (
-    <section className="mx-auto max-w-[1600px] px-4 py-6 md:px-8 md:py-8">
-      <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div>
+    <section className="mx-auto max-w-[1600px] px-3 py-4 sm:px-5 md:px-8 md:py-8">
+      <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+        <div className="min-w-0">
           <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-[#4f8f7c]">
             <CalendarDays size={17} aria-hidden="true" />
             <span>{status === "saving" ? "Guardando cambios" : "Calendario"}</span>
           </div>
-          <h2 className="text-3xl font-semibold tracking-normal text-[#17201a] md:text-4xl">
+          <h2 className="text-balance text-2xl font-semibold tracking-normal text-[#17201a] sm:text-3xl md:text-4xl">
             {weekRange}
           </h2>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-[1fr_auto_1fr] gap-2 sm:flex sm:flex-wrap">
           <Button
             type="button"
             variant="secondary"
             onClick={() => setWeekStart((current) => addWeeks(current, -1))}
             icon={<ChevronLeft size={17} aria-hidden="true" />}
+            className="px-3 sm:px-4"
           >
-            Semana anterior
+            <span className="hidden sm:inline">Semana anterior</span>
+            <span className="sm:hidden">Anterior</span>
           </Button>
           <Button
             type="button"
             variant="ghost"
             onClick={() => setWeekStart(getMonday())}
             icon={<RotateCcw size={17} aria-hidden="true" />}
+            className="px-3 sm:px-4"
           >
             Hoy
           </Button>
@@ -353,8 +358,10 @@ export function WeeklyCalendar({ userId }: WeeklyCalendarProps) {
             variant="secondary"
             onClick={() => setWeekStart((current) => addWeeks(current, 1))}
             icon={<ChevronRight size={17} aria-hidden="true" />}
+            className="px-3 sm:px-4"
           >
-            Semana siguiente
+            <span className="hidden sm:inline">Semana siguiente</span>
+            <span className="sm:hidden">Siguiente</span>
           </Button>
         </div>
       </div>
@@ -374,8 +381,62 @@ export function WeeklyCalendar({ userId }: WeeklyCalendarProps) {
         onDragEnd={handleDragEnd}
         onDragCancel={() => setActiveExercise(null)}
       >
-        <div className="overflow-x-auto pb-4">
-          <div className="grid min-w-max grid-cols-5 gap-4 md:min-w-0">
+        <div className="md:hidden">
+          <div className="-mx-3 mb-4 overflow-x-auto px-3 pb-1">
+            <div className="flex min-w-max gap-2">
+              {WEEK_DAYS.map((day) => {
+                const isSelected = selectedMobileDay === day.value;
+                return (
+                  <button
+                    key={day.value}
+                    type="button"
+                    onClick={() => setSelectedMobileDay(day.value)}
+                    className={`min-h-11 rounded-2xl border px-4 text-sm font-semibold transition ${
+                      isSelected
+                        ? "border-[#17201a] bg-[#17201a] text-white shadow-sm"
+                        : "border-[#d7ded7] bg-white text-[#4d5b50]"
+                    }`}
+                  >
+                    {day.shortLabel}
+                    <span
+                      className={`ml-2 rounded-full px-2 py-0.5 text-xs ${
+                        isSelected
+                          ? "bg-white/[0.14] text-white"
+                          : "bg-[#eef3ef] text-[#4d5b50]"
+                      }`}
+                    >
+                      {groupedExercises[day.value].length}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {WEEK_DAYS.filter((day) => day.value === selectedMobileDay).map(
+            (day) => (
+              <DayColumn
+                key={day.value}
+                day={day}
+                exercises={groupedExercises[day.value]}
+                onAdd={(selectedDay) =>
+                  setModal({ mode: "create", day: selectedDay, exercise: null })
+                }
+                onEdit={(exercise) =>
+                  setModal({
+                    mode: "edit",
+                    day: exercise.day_of_week,
+                    exercise,
+                  })
+                }
+                onDelete={handleDelete}
+              />
+            ),
+          )}
+        </div>
+
+        <div className="hidden md:block">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
             {WEEK_DAYS.map((day) => (
               <DayColumn
                 key={day.value}

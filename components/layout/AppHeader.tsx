@@ -27,14 +27,16 @@ export function AppHeader({ email, name, username }: AppHeaderProps) {
 
   return (
     <header className="border-b border-white/80 bg-white/[0.78] backdrop-blur">
-      <div className="mx-auto flex max-w-[1600px] flex-wrap items-center justify-between gap-4 px-4 py-4 md:px-8">
+      <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-3 px-3 py-3 sm:px-5 md:px-8 md:py-4">
         <div className="flex items-center gap-3">
-          <div className="flex size-11 items-center justify-center rounded-2xl bg-[#17201a] text-white">
-            <Dumbbell size={22} aria-hidden="true" />
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-[#17201a] text-white sm:size-11">
+            <Dumbbell size={21} aria-hidden="true" />
           </div>
-          <div>
+          <div className="min-w-0">
             <p className="text-sm font-medium text-[#647067]">Calendario Gym</p>
-            <h1 className="text-xl font-semibold text-[#17201a]">Plan semanal</h1>
+            <h1 className="truncate text-lg font-semibold text-[#17201a] sm:text-xl">
+              Plan semanal
+            </h1>
           </div>
         </div>
         <div className="flex min-w-0 items-center gap-3">
@@ -52,8 +54,10 @@ export function AppHeader({ email, name, username }: AppHeaderProps) {
             onClick={handleSignOut}
             disabled={isSigningOut}
             icon={<LogOut size={17} aria-hidden="true" />}
+            className="px-3 sm:px-4"
           >
-            Cerrar sesion
+            <span className="hidden sm:inline">Cerrar sesion</span>
+            <span className="sm:hidden">Salir</span>
           </Button>
         </div>
       </div>

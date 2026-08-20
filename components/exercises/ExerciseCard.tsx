@@ -37,14 +37,14 @@ export function ExerciseCard({ exercise, onEdit, onDelete }: ExerciseCardProps) 
     <article
       ref={setNodeRef}
       style={style}
-      className={`group rounded-[18px] border border-[#dfe6df] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
+      className={`group rounded-[18px] border border-[#dfe6df] bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-4 ${
         isDragging ? "opacity-45 ring-2 ring-[#4f8f7c]" : ""
       }`}
     >
-      <div className="flex items-start gap-3">
+      <div className="flex items-start gap-2.5 sm:gap-3">
         <button
           type="button"
-          className="mt-0.5 flex size-8 shrink-0 cursor-grab items-center justify-center rounded-xl text-[#9aa39a] transition hover:bg-[#eef3ef] hover:text-[#17201a] active:cursor-grabbing"
+          className="mt-0.5 flex size-9 shrink-0 cursor-grab touch-none items-center justify-center rounded-xl text-[#9aa39a] transition hover:bg-[#eef3ef] hover:text-[#17201a] active:cursor-grabbing sm:size-8"
           aria-label={`Arrastrar ${exercise.name}`}
           title="Arrastrar"
           {...attributes}
@@ -58,10 +58,10 @@ export function ExerciseCard({ exercise, onEdit, onDelete }: ExerciseCardProps) 
           onClick={() => onEdit(exercise)}
           className="min-w-0 flex-1 text-left"
         >
-          <h3 className="truncate text-sm font-semibold text-[#17201a]">
+          <h3 className="break-words text-sm font-semibold leading-5 text-[#17201a]">
             {exercise.name}
           </h3>
-          <p className="mt-1 text-sm text-[#647067]">
+          <p className="mt-1 text-sm leading-5 text-[#647067]">
             {exercise.sets} series x {exercise.reps} repeticiones
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
@@ -83,11 +83,11 @@ export function ExerciseCard({ exercise, onEdit, onDelete }: ExerciseCardProps) 
           ) : null}
         </button>
 
-        <div className="flex shrink-0 items-center gap-1 opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100">
+        <div className="flex shrink-0 flex-col items-center gap-1 opacity-100 transition sm:flex-row sm:opacity-0 sm:group-hover:opacity-100">
           <button
             type="button"
             onClick={() => onEdit(exercise)}
-            className="flex size-8 items-center justify-center rounded-xl text-[#647067] transition hover:bg-[#eef3ef] hover:text-[#17201a]"
+            className="flex size-9 items-center justify-center rounded-xl text-[#647067] transition hover:bg-[#eef3ef] hover:text-[#17201a] sm:size-8"
             aria-label={`Editar ${exercise.name}`}
             title="Editar"
           >
@@ -96,7 +96,7 @@ export function ExerciseCard({ exercise, onEdit, onDelete }: ExerciseCardProps) 
           <button
             type="button"
             onClick={() => onDelete(exercise)}
-            className="flex size-8 items-center justify-center rounded-xl text-[#a63d2b] transition hover:bg-[#fff0ed]"
+            className="flex size-9 items-center justify-center rounded-xl text-[#a63d2b] transition hover:bg-[#fff0ed] sm:size-8"
             aria-label={`Eliminar ${exercise.name}`}
             title="Eliminar"
           >
