@@ -100,7 +100,20 @@ export function ExerciseCard({
                 {exercise.rest_minutes} min
               </span>
             ) : null}
+            {exercise.dropset_enabled ? (
+              <span className="rounded-full bg-[#fff1f2] px-2.5 py-1 text-xs font-medium text-[#be123c] dark:bg-[#3f1518] dark:text-[#fda4af]">
+                Dropset
+              </span>
+            ) : null}
           </div>
+          {exercise.dropset_enabled ? (
+            <p className="mt-3 rounded-2xl bg-[#fff8f8] px-3 py-2 text-xs leading-5 text-[#8f2d3d] dark:bg-[#251416] dark:text-[#fda4af]">
+              Continua con {exercise.dropset_reps || "--"} reps
+              {exercise.dropset_weight
+                ? ` · ${exercise.dropset_weight}`
+                : ""}
+            </p>
+          ) : null}
           {exercise.notes ? (
             <p className="mt-3 line-clamp-2 text-xs leading-5 text-[#68746b] dark:text-[#a8b4aa]">
               {exercise.notes}

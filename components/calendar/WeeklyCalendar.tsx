@@ -550,6 +550,9 @@ export function WeeklyCalendar({
                       {exercise.rest_minutes
                         ? ` · ${exercise.rest_minutes} min`
                         : ""}
+                      {exercise.dropset_enabled
+                        ? ` · Dropset ${exercise.dropset_reps || "--"} reps${exercise.dropset_weight ? ` ${exercise.dropset_weight}` : ""}`
+                        : ""}
                     </p>
                     {exercise.notes ? <p>{exercise.notes}</p> : null}
                   </article>

@@ -20,6 +20,13 @@ export function ExerciseForm({ exercise, onSubmit, onCancel }: ExerciseFormProps
   const [restMinutes, setRestMinutes] = useState(
     exercise?.rest_minutes ? String(exercise.rest_minutes) : "",
   );
+  const [dropsetEnabled, setDropsetEnabled] = useState(
+    exercise?.dropset_enabled ?? false,
+  );
+  const [dropsetReps, setDropsetReps] = useState(exercise?.dropset_reps ?? "");
+  const [dropsetWeight, setDropsetWeight] = useState(
+    exercise?.dropset_weight ?? "",
+  );
   const [notes, setNotes] = useState(exercise?.notes ?? "");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -33,6 +40,9 @@ export function ExerciseForm({ exercise, onSubmit, onCancel }: ExerciseFormProps
       reps: reps.trim(),
       weight: weight.trim() || null,
       rest_minutes: restMinutes ? Number(restMinutes) : null,
+      dropset_enabled: dropsetEnabled,
+      dropset_reps: dropsetEnabled ? dropsetReps.trim() || null : null,
+      dropset_weight: dropsetEnabled ? dropsetWeight.trim() || null : null,
       notes: notes.trim() || null,
     });
 
@@ -85,6 +95,43 @@ export function ExerciseForm({ exercise, onSubmit, onCancel }: ExerciseFormProps
           step="0.5"
           placeholder="1.5"
         />
+      </div>
+
+      <div className="rounded-2xl border border-[#d9e0d8] bg-white p-4 dark:border-[#334238] dark:bg-[#101711]">
+        <label className="flex items-start gap-3 text-sm font-semibold text-[#354239] dark:text-[#d7e0d8]">
+          <input
+            type="checkbox"
+            checked={dropsetEnabled}
+            onChange={(event) => setDropsetEnabled(event.target.checked)}
+            className="mt-1 size-4 rounded border-[#cfd8cf] accent-[#17201a]"
+          />
+          <span>
+            Dropset
+            <span className="mt-1 block text-xs font-normal leading-5 text-[#647067] dark:text-[#a8b4aa]">
+              Al terminar la serie principal, bajas el peso y sigues sin
+              descanso con otras repeticiones.
+            </span>
+          </span>
+        </label>
+
+        {dropsetEnabled ? (
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <Field
+              id="dropset-reps"
+              label="Repeticiones dropset"
+              value={dropsetReps}
+              onChange={(event) => setDropsetReps(event.target.value)}
+              placeholder="8"
+            />
+            <Field
+              id="dropset-weight"
+              label="Peso dropset"
+              value={dropsetWeight}
+              onChange={(event) => setDropsetWeight(event.target.value)}
+              placeholder="45 kg"
+            />
+          </div>
+        ) : null}
       </div>
 
       <TextArea

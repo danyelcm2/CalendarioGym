@@ -8,6 +8,7 @@
 -- - exercises.plan_id
 -- - exercises.rest_minutes
 -- - exercises.completed
+-- - dropset por ejercicio
 -- - conversion de week_start_date a planes
 -- - conversion de rest_seconds a rest_minutes
 -- - triggers updated_at
@@ -49,6 +50,15 @@ alter table public.exercises
 
 alter table public.exercises
   add column if not exists completed boolean not null default false;
+
+alter table public.exercises
+  add column if not exists dropset_enabled boolean not null default false;
+
+alter table public.exercises
+  add column if not exists dropset_reps text;
+
+alter table public.exercises
+  add column if not exists dropset_weight text;
 
 do $$
 begin

@@ -85,6 +85,9 @@ export type Database = {
           weight: string | null;
           rest_minutes: number | null;
           completed: boolean;
+          dropset_enabled: boolean;
+          dropset_reps: string | null;
+          dropset_weight: string | null;
           notes: string | null;
           created_at: string;
           updated_at: string;
@@ -101,6 +104,9 @@ export type Database = {
           weight?: string | null;
           rest_minutes?: number | null;
           completed?: boolean;
+          dropset_enabled?: boolean;
+          dropset_reps?: string | null;
+          dropset_weight?: string | null;
           notes?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -117,6 +123,9 @@ export type Database = {
           weight?: string | null;
           rest_minutes?: number | null;
           completed?: boolean;
+          dropset_enabled?: boolean;
+          dropset_reps?: string | null;
+          dropset_weight?: string | null;
           notes?: string | null;
           created_at?: string;
           updated_at?: string;

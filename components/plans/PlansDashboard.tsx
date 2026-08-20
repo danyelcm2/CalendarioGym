@@ -214,6 +214,9 @@ export function PlansDashboard({ userId }: PlansDashboardProps) {
             rest_minutes: exercise.rest_minutes,
             notes: exercise.notes,
             completed: false,
+            dropset_enabled: exercise.dropset_enabled,
+            dropset_reps: exercise.dropset_reps,
+            dropset_weight: exercise.dropset_weight,
           })),
         )
         .select();
