@@ -17,8 +17,8 @@ export function ExerciseForm({ exercise, onSubmit, onCancel }: ExerciseFormProps
   const [sets, setSets] = useState(String(exercise?.sets ?? 4));
   const [reps, setReps] = useState(exercise?.reps ?? "10");
   const [weight, setWeight] = useState(exercise?.weight ?? "");
-  const [restSeconds, setRestSeconds] = useState(
-    exercise?.rest_seconds ? String(exercise.rest_seconds) : "",
+  const [restMinutes, setRestMinutes] = useState(
+    exercise?.rest_minutes ? String(exercise.rest_minutes) : "",
   );
   const [notes, setNotes] = useState(exercise?.notes ?? "");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -32,7 +32,7 @@ export function ExerciseForm({ exercise, onSubmit, onCancel }: ExerciseFormProps
       sets: Number(sets),
       reps: reps.trim(),
       weight: weight.trim() || null,
-      rest_seconds: restSeconds ? Number(restSeconds) : null,
+      rest_minutes: restMinutes ? Number(restMinutes) : null,
       notes: notes.trim() || null,
     });
 
@@ -77,12 +77,13 @@ export function ExerciseForm({ exercise, onSubmit, onCancel }: ExerciseFormProps
         />
         <Field
           id="rest"
-          label="Descanso opcional"
-          value={restSeconds}
-          onChange={(event) => setRestSeconds(event.target.value)}
+          label="Descanso (min)"
+          value={restMinutes}
+          onChange={(event) => setRestMinutes(event.target.value)}
           type="number"
           min={0}
-          placeholder="90"
+          step="0.5"
+          placeholder="1.5"
         />
       </div>
 

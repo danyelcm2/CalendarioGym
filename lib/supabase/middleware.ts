@@ -4,7 +4,7 @@ import { createServerClient } from "@supabase/ssr";
 import { supabaseAnonKey, supabaseUrl } from "@/lib/supabase/config";
 import type { Database } from "@/lib/supabase/database.types";
 
-const protectedRoutes = ["/calendar"];
+const protectedRoutes = ["/plans", "/calendar"];
 const authRoutes = ["/auth"];
 
 export async function updateSession(request: NextRequest) {
@@ -47,7 +47,7 @@ export async function updateSession(request: NextRequest) {
 
   if (user && ((isAuthRoute && !showVerification) || pathname === "/")) {
     const url = request.nextUrl.clone();
-    url.pathname = "/calendar";
+    url.pathname = "/plans";
     url.search = "";
     return NextResponse.redirect(url);
   }

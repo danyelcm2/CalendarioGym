@@ -5,15 +5,22 @@ import { useRouter } from "next/navigation";
 import { Dumbbell, LogOut } from "lucide-react";
 
 import { Button } from "@/components/ui/Button";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { createClient } from "@/lib/supabase/client";
 
 type AppHeaderProps = {
   email: string;
   name: string | null;
   username: string;
+  title?: string;
 };
 
-export function AppHeader({ email, name, username }: AppHeaderProps) {
+export function AppHeader({
+  email,
+  name,
+  username,
+  title = "Plan semanal",
+}: AppHeaderProps) {
   const router = useRouter();
   const [isSigningOut, setIsSigningOut] = useState(false);
 
@@ -26,28 +33,29 @@ export function AppHeader({ email, name, username }: AppHeaderProps) {
   }
 
   return (
-    <header className="border-b border-white/80 bg-white/[0.78] backdrop-blur">
+    <header className="border-b border-white/80 bg-white/[0.78] backdrop-blur dark:border-[#26342b] dark:bg-[#101711]/[0.82]">
       <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-3 px-3 py-3 sm:px-5 md:px-8 md:py-4">
         <div className="flex items-center gap-3">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-[#17201a] text-white sm:size-11">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-[#17201a] text-white sm:size-11 dark:bg-[#f7fbf6] dark:text-[#101711]">
             <Dumbbell size={21} aria-hidden="true" />
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-medium text-[#647067]">Calendario Gym</p>
-            <h1 className="truncate text-lg font-semibold text-[#17201a] sm:text-xl">
-              Plan semanal
+            <p className="text-sm font-medium text-[#647067] dark:text-[#a8b4aa]">Calendario Gym</p>
+            <h1 className="truncate text-lg font-semibold text-[#17201a] sm:text-xl dark:text-[#f7fbf6]">
+              {title}
             </h1>
           </div>
         </div>
         <div className="flex min-w-0 items-center gap-3">
           <div className="hidden min-w-0 text-right sm:block">
-            <p className="truncate text-sm font-semibold text-[#17201a]">
+            <p className="truncate text-sm font-semibold text-[#17201a] dark:text-[#f7fbf6]">
               {name || username}
             </p>
-            <p className="truncate text-xs text-[#647067]">
+            <p className="truncate text-xs text-[#647067] dark:text-[#a8b4aa]">
               @{username || email}
             </p>
           </div>
+          <ThemeToggle />
           <Button
             type="button"
             variant="secondary"

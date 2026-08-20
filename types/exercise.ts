@@ -8,17 +8,25 @@ export const WEEK_DAYS = [
 
 export type DayOfWeek = (typeof WEEK_DAYS)[number]["value"];
 
-export type Exercise = {
+export type WorkoutPlan = {
   id: string;
   user_id: string;
   name: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type Exercise = {
+  id: string;
+  user_id: string;
+  plan_id: string;
+  name: string;
   day_of_week: DayOfWeek;
-  week_start_date: string;
   position: number;
   sets: number;
   reps: string;
   weight: string | null;
-  rest_seconds: number | null;
+  rest_minutes: number | null;
   notes: string | null;
   created_at: string;
   updated_at: string;
@@ -29,6 +37,6 @@ export type ExerciseInput = {
   sets: number;
   reps: string;
   weight: string | null;
-  rest_seconds: number | null;
+  rest_minutes: number | null;
   notes: string | null;
 };

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import {
   closestCorners,
   DndContext,
@@ -15,14 +16,12 @@ import {
   arrayMove,
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
-import { CalendarDays, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
+import { ArrowLeft, Dumbbell } from "lucide-react";
 
 import { DayColumn } from "@/components/calendar/DayColumn";
 import { ExerciseModal } from "@/components/exercises/ExerciseModal";
-import { Button } from "@/components/ui/Button";
 import { StatusMessage } from "@/components/ui/StatusMessage";
 import { createClient } from "@/lib/supabase/client";
-import { addWeeks, formatDateInput, formatWeekRange, getMonday } from "@/lib/utils/date";
 import {
   flattenGroups,
   groupExercises,
@@ -33,6 +32,8 @@ import { WEEK_DAYS, type DayOfWeek, type Exercise, type ExerciseInput } from "@/
 
 type WeeklyCalendarProps = {
   userId: string;
+  planId: string;
+  planName: string;
 };
 
 type ModalState =
@@ -40,8 +41,7 @@ type ModalState =
   | { mode: "edit"; day: DayOfWeek; exercise: Exercise }
   | null;
 
-export function WeeklyCalendar({ userId }: WeeklyCalendarProps) {
-  const [weekStart, setWeekStart] = useState(() => getMonday());
+export function WeeklyCalendar({ userId, planId, planName }: WeeklyCalendarProps) {
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [modal, setModal] = useState<ModalState>(null);
   const [selectedMobileDay, setSelectedMobileDay] =
@@ -52,9 +52,7 @@ export function WeeklyCalendar({ userId }: WeeklyCalendarProps) {
   const [error, setError] = useState<string | null>(null);
 
   const supabase = useMemo(() => createClient(), []);
-  const weekStartKey = formatDateInput(weekStart);
   const groupedExercises = useMemo(() => groupExercises(exercises), [exercises]);
-  const weekRange = formatWeekRange(weekStart);
   const currentDayLabel = modal
     ? WEEK_DAYS.find((day) => day.value === modal.day)?.label ?? ""
     : "";
@@ -77,7 +75,7 @@ export function WeeklyCalendar({ userId }: WeeklyCalendarProps) {
     const { data, error: fetchError } = await supabase
       .from("exercises")
       .select("*")
-      .eq("week_start_date", weekStartKey)
+      .eq("plan_id", planId)
       .order("position", { ascending: true });
 
     if (fetchError) {
@@ -89,7 +87,7 @@ export function WeeklyCalendar({ userId }: WeeklyCalendarProps) {
 
     setExercises((data ?? []) as Exercise[]);
     setStatus("idle");
-  }, [supabase, weekStartKey]);
+  }, [supabase, planId]);
 
   useEffect(() => {
     void loadExercises();
@@ -117,7 +115,6 @@ export function WeeklyCalendar({ userId }: WeeklyCalendarProps) {
           .update({
             day_of_week: exercise.day_of_week,
             position: exercise.position,
-            week_start_date: weekStartKey,
           })
           .eq("id", exercise.id),
       ),
@@ -231,8 +228,8 @@ export function WeeklyCalendar({ userId }: WeeklyCalendarProps) {
       .insert({
         ...input,
         user_id: userId,
+        plan_id: planId,
         day_of_week: modal.day,
-        week_start_date: weekStartKey,
         position,
       })
       .select()
@@ -324,45 +321,25 @@ export function WeeklyCalendar({ userId }: WeeklyCalendarProps) {
     <section className="mx-auto max-w-[1600px] px-3 py-4 sm:px-5 md:px-8 md:py-8">
       <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
         <div className="min-w-0">
-          <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-[#4f8f7c]">
-            <CalendarDays size={17} aria-hidden="true" />
-            <span>{status === "saving" ? "Guardando cambios" : "Calendario"}</span>
+          <div className="mb-3">
+            <Link
+              href="/plans"
+              className="inline-flex items-center gap-2 rounded-2xl px-1 py-1 text-sm font-semibold text-[#4f8f7c] transition hover:text-[#326d5f] dark:hover:text-[#9ee4d1]"
+            >
+              <ArrowLeft size={17} aria-hidden="true" />
+              Mis planes
+            </Link>
           </div>
-          <h2 className="text-balance text-2xl font-semibold tracking-normal text-[#17201a] sm:text-3xl md:text-4xl">
-            {weekRange}
+          <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-[#4f8f7c]">
+            <Dumbbell size={17} aria-hidden="true" />
+            <span>{status === "saving" ? "Guardando cambios" : "Plan semanal"}</span>
+          </div>
+          <h2 className="text-balance text-3xl font-semibold tracking-normal text-[#17201a] sm:text-4xl dark:text-[#f7fbf6]">
+            {planName}
           </h2>
-        </div>
-
-        <div className="grid grid-cols-[1fr_auto_1fr] gap-2 sm:flex sm:flex-wrap">
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() => setWeekStart((current) => addWeeks(current, -1))}
-            icon={<ChevronLeft size={17} aria-hidden="true" />}
-            className="px-3 sm:px-4"
-          >
-            <span className="hidden sm:inline">Semana anterior</span>
-            <span className="sm:hidden">Anterior</span>
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => setWeekStart(getMonday())}
-            icon={<RotateCcw size={17} aria-hidden="true" />}
-            className="px-3 sm:px-4"
-          >
-            Hoy
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() => setWeekStart((current) => addWeeks(current, 1))}
-            icon={<ChevronRight size={17} aria-hidden="true" />}
-            className="px-3 sm:px-4"
-          >
-            <span className="hidden sm:inline">Semana siguiente</span>
-            <span className="sm:hidden">Siguiente</span>
-          </Button>
+          <p className="mt-2 text-sm leading-6 text-[#647067] dark:text-[#a8b4aa]">
+            Lunes a viernes · {exercises.length} ejercicios
+          </p>
         </div>
       </div>
 
@@ -393,16 +370,16 @@ export function WeeklyCalendar({ userId }: WeeklyCalendarProps) {
                     onClick={() => setSelectedMobileDay(day.value)}
                     className={`min-h-11 rounded-2xl border px-4 text-sm font-semibold transition ${
                       isSelected
-                        ? "border-[#17201a] bg-[#17201a] text-white shadow-sm"
-                        : "border-[#d7ded7] bg-white text-[#4d5b50]"
+                        ? "border-[#17201a] bg-[#17201a] text-white shadow-sm dark:border-[#f7fbf6] dark:bg-[#f7fbf6] dark:text-[#101711]"
+                        : "border-[#d7ded7] bg-white text-[#4d5b50] dark:border-[#334238] dark:bg-[#162019] dark:text-[#d7e0d8]"
                     }`}
                   >
                     {day.shortLabel}
                     <span
                       className={`ml-2 rounded-full px-2 py-0.5 text-xs ${
                         isSelected
-                          ? "bg-white/[0.14] text-white"
-                          : "bg-[#eef3ef] text-[#4d5b50]"
+                          ? "bg-white/[0.14] text-white dark:bg-[#101711]/[0.1] dark:text-[#101711]"
+                          : "bg-[#eef3ef] text-[#4d5b50] dark:bg-[#223027] dark:text-[#d7e0d8]"
                       }`}
                     >
                       {groupedExercises[day.value].length}

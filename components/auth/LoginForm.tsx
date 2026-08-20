@@ -25,7 +25,7 @@ export function LoginForm() {
   const redirectPath =
     redirectedFrom?.startsWith("/") && !redirectedFrom.startsWith("//")
       ? redirectedFrom
-      : "/calendar";
+      : "/plans";
   const [mode, setMode] = useState<FormView>("login");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -166,14 +166,14 @@ export function LoginForm() {
   if (isVerified) {
     return (
       <div className="space-y-5">
-        <div className="rounded-[22px] border border-[#c7e7d4] bg-[#f1fbf5] p-5 text-center">
-          <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-2xl bg-[#1f6a3d] text-white">
+        <div className="rounded-[22px] border border-[#c7e7d4] bg-[#f1fbf5] p-5 text-center dark:border-[#235c39] dark:bg-[#13251a]">
+          <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-2xl bg-[#1f6a3d] text-white dark:bg-[#9ee4b4] dark:text-[#101711]">
             <CheckCircle2 size={24} aria-hidden="true" />
           </div>
-          <h2 className="text-xl font-semibold text-[#17201a]">
+          <h2 className="text-xl font-semibold text-[#17201a] dark:text-[#f7fbf6]">
             Verificacion exitosa
           </h2>
-          <p className="mt-2 text-sm leading-6 text-[#4d5b50]">
+          <p className="mt-2 text-sm leading-6 text-[#4d5b50] dark:text-[#c5d0c7]">
             Tu cuenta quedo activa. Ya puedes continuar a tu calendario de
             entrenamientos.
           </p>
@@ -182,7 +182,7 @@ export function LoginForm() {
           type="button"
           className="w-full"
           onClick={() => {
-            router.push("/calendar");
+            router.push("/plans");
             router.refresh();
           }}
         >
@@ -305,7 +305,7 @@ export function LoginForm() {
             setMessage(null);
             setMode("reset");
           }}
-          className="w-full rounded-2xl px-4 py-2 text-sm font-semibold text-[#4d5b50] transition hover:bg-[#eef3ef]"
+          className="w-full rounded-2xl px-4 py-2 text-sm font-semibold text-[#4d5b50] transition hover:bg-[#eef3ef] dark:text-[#c5d0c7] dark:hover:bg-[#1d2a22]"
         >
           Cambiar o recuperar contrasena
         </button>
@@ -318,7 +318,7 @@ export function LoginForm() {
           setMessage(null);
           setMode(mode === "login" ? "signup" : "login");
         }}
-        className="w-full rounded-2xl px-4 py-3 text-sm font-semibold text-[#4d5b50] transition hover:bg-[#eef3ef]"
+        className="w-full rounded-2xl px-4 py-3 text-sm font-semibold text-[#4d5b50] transition hover:bg-[#eef3ef] dark:text-[#c5d0c7] dark:hover:bg-[#1d2a22]"
       >
         {mode === "login"
           ? "Crear cuenta nueva"
