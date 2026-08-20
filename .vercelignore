@@ -1,5 +1,3 @@
 .env
-.env.*
-*.sql
-supabase/
-README.md
+.env.local
+.env.*.local
