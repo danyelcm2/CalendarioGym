@@ -2,7 +2,7 @@
 
 import { CSS } from "@dnd-kit/utilities";
 import { useSortable } from "@dnd-kit/sortable";
-import { GripVertical, Pencil, Trash2 } from "lucide-react";
+import { Check, GripVertical, Pencil, Trash2 } from "lucide-react";
 
 import type { Exercise } from "@/types/exercise";
 
@@ -10,9 +10,15 @@ type ExerciseCardProps = {
   exercise: Exercise;
   onEdit: (exercise: Exercise) => void;
   onDelete: (exercise: Exercise) => void;
+  onToggleComplete: (exercise: Exercise) => void;
 };
 
-export function ExerciseCard({ exercise, onEdit, onDelete }: ExerciseCardProps) {
+export function ExerciseCard({
+  exercise,
+  onEdit,
+  onDelete,
+  onToggleComplete,
+}: ExerciseCardProps) {
   const {
     attributes,
     listeners,
@@ -39,9 +45,28 @@ export function ExerciseCard({ exercise, onEdit, onDelete }: ExerciseCardProps) 
       style={style}
       className={`group rounded-[18px] border border-[#dfe6df] bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-4 dark:border-[#334238] dark:bg-[#101711] ${
         isDragging ? "opacity-45 ring-2 ring-[#4f8f7c]" : ""
+      } ${
+        exercise.completed ? "bg-[#f4fbf6] dark:bg-[#101f16]" : ""
       }`}
     >
       <div className="flex items-start gap-2.5 sm:gap-3">
+        <button
+          type="button"
+          onClick={() => onToggleComplete(exercise)}
+          className={`mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl border transition sm:size-8 ${
+            exercise.completed
+              ? "border-[#1f6a3d] bg-[#1f6a3d] text-white dark:border-[#9ee4b4] dark:bg-[#9ee4b4] dark:text-[#101711]"
+              : "border-[#cfd8cf] bg-white text-transparent hover:border-[#4f8f7c] dark:border-[#334238] dark:bg-[#101711]"
+          }`}
+          aria-label={
+            exercise.completed
+              ? `Marcar ${exercise.name} como pendiente`
+              : `Marcar ${exercise.name} como completado`
+          }
+          title={exercise.completed ? "Completado" : "Marcar completado"}
+        >
+          <Check size={17} aria-hidden="true" />
+        </button>
         <button
           type="button"
           className="mt-0.5 flex size-9 shrink-0 cursor-grab touch-none items-center justify-center rounded-xl text-[#9aa39a] transition hover:bg-[#eef3ef] hover:text-[#17201a] active:cursor-grabbing sm:size-8 dark:text-[#6f7d72] dark:hover:bg-[#223027] dark:hover:text-[#f7fbf6]"

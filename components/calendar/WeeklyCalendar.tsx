@@ -16,10 +16,11 @@ import {
   arrayMove,
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
-import { ArrowLeft, Dumbbell } from "lucide-react";
+import { ArrowLeft, Download, Dumbbell } from "lucide-react";
 
 import { DayColumn } from "@/components/calendar/DayColumn";
 import { ExerciseModal } from "@/components/exercises/ExerciseModal";
+import { Button } from "@/components/ui/Button";
 import { StatusMessage } from "@/components/ui/StatusMessage";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -34,6 +35,7 @@ type WeeklyCalendarProps = {
   userId: string;
   planId: string;
   planName: string;
+  planColor?: string;
 };
 
 type ModalState =
@@ -41,7 +43,11 @@ type ModalState =
   | { mode: "edit"; day: DayOfWeek; exercise: Exercise }
   | null;
 
-export function WeeklyCalendar({ userId, planId, planName }: WeeklyCalendarProps) {
+export function WeeklyCalendar({
+  userId,
+  planId,
+  planName,
+}: WeeklyCalendarProps) {
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [modal, setModal] = useState<ModalState>(null);
   const [selectedMobileDay, setSelectedMobileDay] =
@@ -317,6 +323,34 @@ export function WeeklyCalendar({ userId, planId, planName }: WeeklyCalendarProps
     }
   }
 
+  async function handleToggleComplete(exercise: Exercise) {
+    const previousExercises = exercises;
+    const nextCompleted = !exercise.completed;
+
+    setExercises((current) =>
+      current.map((item) =>
+        item.id === exercise.id ? { ...item, completed: nextCompleted } : item,
+      ),
+    );
+
+    const { error: completeError } = await supabase
+      .from("exercises")
+      .update({ completed: nextCompleted })
+      .eq("id", exercise.id);
+
+    if (completeError) {
+      setExercises(previousExercises);
+      setError("No pudimos actualizar el estado del ejercicio.");
+      return;
+    }
+
+    setNotice(nextCompleted ? "Ejercicio completado." : "Ejercicio pendiente.");
+  }
+
+  function handlePrint() {
+    window.print();
+  }
+
   return (
     <section className="mx-auto max-w-[1600px] px-3 py-4 sm:px-5 md:px-8 md:py-8">
       <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
@@ -341,6 +375,15 @@ export function WeeklyCalendar({ userId, planId, planName }: WeeklyCalendarProps
             Lunes a viernes · {exercises.length} ejercicios
           </p>
         </div>
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={handlePrint}
+          icon={<Download size={17} aria-hidden="true" />}
+          className="no-print w-full xl:w-auto"
+        >
+          Exportar PDF
+        </Button>
       </div>
 
       <div className="mb-4 min-h-12 space-y-3">
@@ -407,6 +450,7 @@ export function WeeklyCalendar({ userId, planId, planName }: WeeklyCalendarProps
                   })
                 }
                 onDelete={handleDelete}
+                onToggleComplete={handleToggleComplete}
               />
             ),
           )}
@@ -430,11 +474,44 @@ export function WeeklyCalendar({ userId, planId, planName }: WeeklyCalendarProps
                   })
                 }
                 onDelete={handleDelete}
+                onToggleComplete={handleToggleComplete}
               />
             ))}
           </div>
         </div>
       </DndContext>
+
+      <div className="print-plan">
+        <h1>{planName}</h1>
+        <p>Lunes a viernes · {exercises.length} ejercicios</p>
+        <div className="print-grid">
+          {WEEK_DAYS.map((day) => (
+            <section key={day.value}>
+              <h2>{day.label}</h2>
+              {groupedExercises[day.value].length > 0 ? (
+                groupedExercises[day.value].map((exercise) => (
+                  <article key={exercise.id}>
+                    <h3>
+                      {exercise.completed ? "[x] " : ""}
+                      {exercise.name}
+                    </h3>
+                    <p>
+                      {exercise.sets} x {exercise.reps}
+                      {exercise.weight ? ` · ${exercise.weight}` : ""}
+                      {exercise.rest_minutes
+                        ? ` · ${exercise.rest_minutes} min`
+                        : ""}
+                    </p>
+                    {exercise.notes ? <p>{exercise.notes}</p> : null}
+                  </article>
+                ))
+              ) : (
+                <p>Sin ejercicios</p>
+              )}
+            </section>
+          ))}
+        </div>
+      </div>
 
       {activeExercise ? (
         <p className="sr-only">Arrastrando {activeExercise.name}</p>

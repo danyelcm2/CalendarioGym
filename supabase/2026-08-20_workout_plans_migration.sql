@@ -9,9 +9,22 @@ create table if not exists public.workout_plans (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
   name text not null,
+  color text not null default 'teal',
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  constraint workout_plans_color_chk
+    check (color in ('blue', 'red', 'green', 'teal', 'purple', 'amber'))
 );
+
+alter table public.workout_plans
+  add column if not exists color text not null default 'teal';
+
+alter table public.workout_plans
+  drop constraint if exists workout_plans_color_chk;
+
+alter table public.workout_plans
+  add constraint workout_plans_color_chk
+  check (color in ('blue', 'red', 'green', 'teal', 'purple', 'amber'));
 
 create index if not exists workout_plans_user_created_idx
   on public.workout_plans(user_id, created_at desc);
@@ -21,6 +34,9 @@ alter table public.exercises
 
 alter table public.exercises
   add column if not exists rest_minutes numeric(5, 2);
+
+alter table public.exercises
+  add column if not exists completed boolean not null default false;
 
 update public.exercises
 set rest_minutes = round((rest_seconds::numeric / 60), 2)

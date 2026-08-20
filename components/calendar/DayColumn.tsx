@@ -18,6 +18,7 @@ type DayColumnProps = {
   onAdd: (day: DayOfWeek) => void;
   onEdit: (exercise: Exercise) => void;
   onDelete: (exercise: Exercise) => void;
+  onToggleComplete: (exercise: Exercise) => void;
 };
 
 export function DayColumn({
@@ -26,6 +27,7 @@ export function DayColumn({
   onAdd,
   onEdit,
   onDelete,
+  onToggleComplete,
 }: DayColumnProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: day.value,
@@ -52,6 +54,9 @@ export function DayColumn({
           <h2 className="text-lg font-semibold text-[#17201a] sm:text-xl dark:text-[#f7fbf6]">
             {day.label}
           </h2>
+          <p className="mt-1 text-xs font-medium text-[#7a857d] dark:text-[#a8b4aa]">
+            Nombre de ejercicio
+          </p>
         </div>
         <span className="rounded-full bg-[#edf1ec] px-3 py-1 text-xs font-semibold text-[#4d5b50] dark:bg-[#223027] dark:text-[#d7e0d8]">
           {exercises.length}
@@ -70,6 +75,7 @@ export function DayColumn({
                 exercise={exercise}
                 onEdit={onEdit}
                 onDelete={onDelete}
+                onToggleComplete={onToggleComplete}
               />
             ))
           ) : (

@@ -2,20 +2,34 @@
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import Link from "next/link";
-import { Dumbbell, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
+import {
+  Copy,
+  Dumbbell,
+  MoreHorizontal,
+  Pencil,
+  Plus,
+  Trash2,
+  Trophy,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
 import { Modal } from "@/components/ui/Modal";
 import { StatusMessage } from "@/components/ui/StatusMessage";
 import { createClient } from "@/lib/supabase/client";
-import type { WorkoutPlan } from "@/types/exercise";
+import {
+  getPersonalRecords,
+  getPlanColor,
+  getPlanExerciseCount,
+  inferPlanColor,
+  PLAN_COLORS,
+  type PlanColor,
+} from "@/lib/utils/plans";
+import type { Exercise, WorkoutPlan } from "@/types/exercise";
 
 type PlansDashboardProps = {
   userId: string;
 };
-
-type PlanCounts = Record<string, number>;
 
 type ModalState =
   | { mode: "create"; plan: null }
@@ -24,14 +38,16 @@ type ModalState =
 
 export function PlansDashboard({ userId }: PlansDashboardProps) {
   const [plans, setPlans] = useState<WorkoutPlan[]>([]);
-  const [counts, setCounts] = useState<PlanCounts>({});
+  const [exercises, setExercises] = useState<Exercise[]>([]);
   const [modal, setModal] = useState<ModalState>(null);
   const [planName, setPlanName] = useState("");
+  const [planColor, setPlanColor] = useState<PlanColor>("teal");
   const [status, setStatus] = useState<"loading" | "idle" | "saving">("loading");
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
   const supabase = useMemo(() => createClient(), []);
+  const personalRecords = useMemo(() => getPersonalRecords(exercises), [exercises]);
 
   const loadPlans = useCallback(async () => {
     setStatus("loading");
@@ -52,30 +68,22 @@ export function PlansDashboard({ userId }: PlansDashboardProps) {
     setPlans(nextPlans);
 
     if (nextPlans.length === 0) {
-      setCounts({});
+      setExercises([]);
       setStatus("idle");
       return;
     }
 
     const { data: exerciseData, error: exerciseError } = await supabase
       .from("exercises")
-      .select("plan_id");
+      .select("*");
 
     if (exerciseError) {
-      setCounts({});
+      setExercises([]);
       setStatus("idle");
       return;
     }
 
-    const nextCounts = (exerciseData ?? []).reduce<PlanCounts>(
-      (accumulator, exercise) => {
-        accumulator[exercise.plan_id] = (accumulator[exercise.plan_id] ?? 0) + 1;
-        return accumulator;
-      },
-      {},
-    );
-
-    setCounts(nextCounts);
+    setExercises((exerciseData ?? []) as Exercise[]);
     setStatus("idle");
   }, [supabase]);
 
@@ -94,11 +102,13 @@ export function PlansDashboard({ userId }: PlansDashboardProps) {
 
   function openCreateModal() {
     setPlanName("");
+    setPlanColor("teal");
     setModal({ mode: "create", plan: null });
   }
 
   function openRenameModal(plan: WorkoutPlan) {
     setPlanName(plan.name);
+    setPlanColor(getPlanColor(plan.color).value);
     setModal({ mode: "rename", plan });
   }
 
@@ -115,11 +125,14 @@ export function PlansDashboard({ userId }: PlansDashboardProps) {
     setError(null);
 
     if (modal.mode === "create") {
+      const selectedColor =
+        planColor === "teal" ? inferPlanColor(cleanName) : planColor;
       const { data, error: createError } = await supabase
         .from("workout_plans")
         .insert({
           user_id: userId,
           name: cleanName,
+          color: selectedColor,
         })
         .select()
         .single();
@@ -139,7 +152,7 @@ export function PlansDashboard({ userId }: PlansDashboardProps) {
 
     const { data, error: renameError } = await supabase
       .from("workout_plans")
-      .update({ name: cleanName })
+      .update({ name: cleanName, color: planColor })
       .eq("id", modal.plan.id)
       .select()
       .single();
@@ -158,6 +171,68 @@ export function PlansDashboard({ userId }: PlansDashboardProps) {
     );
     setNotice("Plan actualizado.");
     setModal(null);
+  }
+
+  async function handleDuplicate(plan: WorkoutPlan) {
+    setStatus("saving");
+    setError(null);
+
+    const { data: newPlan, error: planError } = await supabase
+      .from("workout_plans")
+      .insert({
+        user_id: userId,
+        name: `${plan.name} copia`,
+        color: plan.color,
+      })
+      .select()
+      .single();
+
+    if (planError || !newPlan) {
+      setStatus("idle");
+      setError("No pudimos duplicar el plan.");
+      return;
+    }
+
+    const sourceExercises = exercises.filter(
+      (exercise) => exercise.plan_id === plan.id,
+    );
+
+    if (sourceExercises.length > 0) {
+      const { data: copiedExercises, error: exerciseError } = await supabase
+        .from("exercises")
+        .insert(
+          sourceExercises.map((exercise) => ({
+            user_id: userId,
+            plan_id: newPlan.id,
+            name: exercise.name,
+            day_of_week: exercise.day_of_week,
+            position: exercise.position,
+            sets: exercise.sets,
+            reps: exercise.reps,
+            weight: exercise.weight,
+            rest_minutes: exercise.rest_minutes,
+            notes: exercise.notes,
+            completed: false,
+          })),
+        )
+        .select();
+
+      if (exerciseError) {
+        await supabase.from("workout_plans").delete().eq("id", newPlan.id);
+        setStatus("idle");
+        setError("No pudimos copiar los ejercicios del plan.");
+        return;
+      }
+
+      setExercises((current) => [
+        ...((copiedExercises ?? []) as Exercise[]),
+        ...current,
+      ]);
+    }
+
+    setPlans((current) => [newPlan as WorkoutPlan, ...current]);
+    setStatus("idle");
+    setNotice("Plan duplicado.");
   }
 
   async function handleDelete(plan: WorkoutPlan) {
@@ -185,11 +260,9 @@ export function PlansDashboard({ userId }: PlansDashboardProps) {
       return;
     }
 
-    setCounts((current) => {
-      const nextCounts = { ...current };
-      delete nextCounts[plan.id];
-      return nextCounts;
-    });
+    setExercises((current) =>
+      current.filter((exercise) => exercise.plan_id !== plan.id),
+    );
     setNotice("Plan eliminado.");
   }
 
@@ -217,6 +290,42 @@ export function PlansDashboard({ userId }: PlansDashboardProps) {
         </Button>
       </div>
 
+      <div className="mb-5 rounded-[24px] border border-white/80 bg-white/[0.72] p-4 shadow-sm dark:border-[#26342b] dark:bg-[#162019]/[0.72] sm:p-5">
+        <div className="mb-4 flex items-center gap-2">
+          <Trophy size={18} className="text-[#f59e0b]" aria-hidden="true" />
+          <h3 className="text-base font-semibold text-[#17201a] dark:text-[#f7fbf6]">
+            Records personales
+          </h3>
+        </div>
+        {personalRecords.length > 0 ? (
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {personalRecords.map((record) => (
+              <div
+                key={record.name}
+                className="rounded-2xl border border-[#e2e8e2] bg-white p-4 dark:border-[#334238] dark:bg-[#101711]"
+              >
+                <p className="truncate text-sm font-semibold text-[#17201a] dark:text-[#f7fbf6]">
+                  {record.name}
+                </p>
+                <p className="mt-2 text-2xl font-semibold text-[#17201a] dark:text-[#f7fbf6]">
+                  {record.weight ? `${record.weight} kg` : "PR"}
+                </p>
+                <p className="mt-1 text-xs text-[#647067] dark:text-[#a8b4aa]">
+                  {record.sets} x {record.reps}
+                  {record.estimatedMax
+                    ? ` · estimado ${record.estimatedMax.toFixed(1)} kg`
+                    : ""}
+                </p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm leading-6 text-[#647067] dark:text-[#a8b4aa]">
+            Agrega peso y repeticiones a tus ejercicios para detectar tus mejores marcas.
+          </p>
+        )}
+      </div>
+
       <div className="mb-4 min-h-12 space-y-3">
         {status === "loading" ? <StatusMessage>Cargando planes...</StatusMessage> : null}
         {error ? <StatusMessage type="error">{error}</StatusMessage> : null}
@@ -241,50 +350,68 @@ export function PlansDashboard({ userId }: PlansDashboardProps) {
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {plans.map((plan) => (
-            <article
-              key={plan.id}
-              className="rounded-[24px] border border-white/80 bg-white/[0.76] p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-[#26342b] dark:bg-[#162019]/[0.78]"
-            >
-              <div className="mb-5 flex items-start justify-between gap-4">
-                <div className="min-w-0">
-                  <h3 className="break-words text-xl font-semibold text-[#17201a] dark:text-[#f7fbf6]">
-                    {plan.name}
-                  </h3>
-                  <p className="mt-2 text-sm text-[#647067] dark:text-[#a8b4aa]">
-                    5 dias · {counts[plan.id] ?? 0} ejercicios
-                  </p>
-                </div>
-                <div className="flex shrink-0 gap-1">
-                  <button
-                    type="button"
-                    onClick={() => openRenameModal(plan)}
-                    className="flex size-9 items-center justify-center rounded-xl text-[#647067] transition hover:bg-[#eef3ef] dark:text-[#a8b4aa] dark:hover:bg-[#223027]"
-                    aria-label={`Renombrar ${plan.name}`}
-                    title="Renombrar"
+          {plans.map((plan) => {
+              const color = getPlanColor(plan.color);
+              const exerciseCount = getPlanExerciseCount(plan, exercises);
+              return (
+                <article
+                  key={plan.id}
+                  className={`rounded-[24px] border border-t-4 border-white/80 bg-white/[0.76] p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-[#26342b] dark:bg-[#162019]/[0.78] ${color.border}`}
+                >
+                  <div className="mb-5 flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <span
+                        className={`mb-3 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${color.soft}`}
+                      >
+                        {color.label}
+                      </span>
+                      <h3 className="break-words text-xl font-semibold text-[#17201a] dark:text-[#f7fbf6]">
+                        {plan.name}
+                      </h3>
+                      <p className="mt-2 text-sm text-[#647067] dark:text-[#a8b4aa]">
+                        5 dias · {exerciseCount} ejercicios
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 gap-1">
+                      <button
+                        type="button"
+                        onClick={() => handleDuplicate(plan)}
+                        className="flex size-9 items-center justify-center rounded-xl text-[#647067] transition hover:bg-[#eef3ef] dark:text-[#a8b4aa] dark:hover:bg-[#223027]"
+                        aria-label={`Duplicar ${plan.name}`}
+                        title="Duplicar"
+                      >
+                        <Copy size={16} aria-hidden="true" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => openRenameModal(plan)}
+                        className="flex size-9 items-center justify-center rounded-xl text-[#647067] transition hover:bg-[#eef3ef] dark:text-[#a8b4aa] dark:hover:bg-[#223027]"
+                        aria-label={`Renombrar ${plan.name}`}
+                        title="Renombrar"
+                      >
+                        <Pencil size={16} aria-hidden="true" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(plan)}
+                        className="flex size-9 items-center justify-center rounded-xl text-[#a63d2b] transition hover:bg-[#fff0ed] dark:text-[#ff9a88] dark:hover:bg-[#3a1f1b]"
+                        aria-label={`Eliminar ${plan.name}`}
+                        title="Eliminar"
+                      >
+                        <Trash2 size={16} aria-hidden="true" />
+                      </button>
+                    </div>
+                  </div>
+                  <Link
+                    href={`/plans/${plan.id}`}
+                    className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl bg-[#17201a] px-4 text-sm font-semibold text-white transition hover:bg-[#263228] dark:bg-[#f7fbf6] dark:text-[#101711] dark:hover:bg-[#dbe7dd]"
                   >
-                    <Pencil size={16} aria-hidden="true" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(plan)}
-                    className="flex size-9 items-center justify-center rounded-xl text-[#a63d2b] transition hover:bg-[#fff0ed] dark:text-[#ff9a88] dark:hover:bg-[#3a1f1b]"
-                    aria-label={`Eliminar ${plan.name}`}
-                    title="Eliminar"
-                  >
-                    <Trash2 size={16} aria-hidden="true" />
-                  </button>
-                </div>
-              </div>
-              <Link
-                href={`/plans/${plan.id}`}
-                className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl bg-[#17201a] px-4 text-sm font-semibold text-white transition hover:bg-[#263228] dark:bg-[#f7fbf6] dark:text-[#101711] dark:hover:bg-[#dbe7dd]"
-              >
-                Abrir plan
-                <MoreHorizontal size={17} aria-hidden="true" />
-              </Link>
-            </article>
-          ))}
+                    Abrir plan
+                    <MoreHorizontal size={17} aria-hidden="true" />
+                  </Link>
+                </article>
+              );
+            })}
         </div>
       )}
 
@@ -302,6 +429,28 @@ export function PlansDashboard({ userId }: PlansDashboardProps) {
               placeholder="Hipertrofia"
               required
             />
+            <div>
+              <p className="mb-2 text-sm font-medium text-[#354239] dark:text-[#d7e0d8]">
+                Color del plan
+              </p>
+              <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+                {PLAN_COLORS.map((color) => (
+                  <button
+                    key={color.value}
+                    type="button"
+                    onClick={() => setPlanColor(color.value)}
+                    className={`flex min-h-11 items-center justify-center gap-2 rounded-2xl border px-3 text-sm font-semibold transition ${
+                      planColor === color.value
+                        ? "border-[#17201a] bg-[#17201a] text-white dark:border-[#f7fbf6] dark:bg-[#f7fbf6] dark:text-[#101711]"
+                        : "border-[#d7ded7] bg-white text-[#4d5b50] dark:border-[#334238] dark:bg-[#101711] dark:text-[#d7e0d8]"
+                    }`}
+                  >
+                    <span className={`size-3 rounded-full ${color.dot}`} />
+                    {color.label}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
               <Button
                 type="button"
