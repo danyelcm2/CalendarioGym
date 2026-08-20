@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { KeyRound, LogIn, Mail, UserPlus } from "lucide-react";
+import { CheckCircle2, KeyRound, LogIn, Mail, UserPlus } from "lucide-react";
 
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
@@ -20,6 +20,8 @@ export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectedFrom = searchParams.get("redirectedFrom");
+  const isVerified = searchParams.get("verified") === "1";
+  const verificationFailed = searchParams.get("verified") === "error";
   const redirectPath =
     redirectedFrom?.startsWith("/") && !redirectedFrom.startsWith("//")
       ? redirectedFrom
@@ -129,11 +131,20 @@ export function LoginForm() {
     }
 
     const cleanUsername = normalizeUsername(username);
+    const emailRedirectTo =
+      typeof window !== "undefined"
+        ? (() => {
+            const callbackUrl = new URL("/auth/callback", window.location.origin);
+            callbackUrl.searchParams.set("next", "/auth?verified=1");
+            return callbackUrl.toString();
+          })()
+        : undefined;
 
     const { error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: {
+        emailRedirectTo,
         data: {
           name,
           username: cleanUsername,
@@ -148,8 +159,58 @@ export function LoginForm() {
       return;
     }
 
-    setMessage("Cuenta creada. Ya puedes iniciar sesion con tu usuario.");
+    setMessage("Cuenta creada. Revisa tu correo para verificarla.");
     setMode("login");
+  }
+
+  if (isVerified) {
+    return (
+      <div className="space-y-5">
+        <div className="rounded-[22px] border border-[#c7e7d4] bg-[#f1fbf5] p-5 text-center">
+          <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-2xl bg-[#1f6a3d] text-white">
+            <CheckCircle2 size={24} aria-hidden="true" />
+          </div>
+          <h2 className="text-xl font-semibold text-[#17201a]">
+            Verificacion exitosa
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-[#4d5b50]">
+            Tu cuenta quedo activa. Ya puedes continuar a tu calendario de
+            entrenamientos.
+          </p>
+        </div>
+        <Button
+          type="button"
+          className="w-full"
+          onClick={() => {
+            router.push("/calendar");
+            router.refresh();
+          }}
+        >
+          Ir al calendario
+        </Button>
+      </div>
+    );
+  }
+
+  if (verificationFailed) {
+    return (
+      <div className="space-y-5">
+        <StatusMessage type="error">
+          No pudimos verificar la cuenta con este enlace. Solicita uno nuevo o
+          intenta iniciar sesion si ya fue verificada.
+        </StatusMessage>
+        <Button
+          type="button"
+          className="w-full"
+          onClick={() => {
+            router.replace("/auth");
+            setMode("login");
+          }}
+        >
+          Volver a iniciar sesion
+        </Button>
+      </div>
+    );
   }
 
   return (

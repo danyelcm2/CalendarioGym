@@ -34,6 +34,7 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const pathname = request.nextUrl.pathname;
+  const showVerification = request.nextUrl.searchParams.get("verified") === "1";
   const isProtected = protectedRoutes.some((route) => pathname.startsWith(route));
   const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
 
@@ -44,7 +45,7 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (user && (isAuthRoute || pathname === "/")) {
+  if (user && ((isAuthRoute && !showVerification) || pathname === "/")) {
     const url = request.nextUrl.clone();
     url.pathname = "/calendar";
     url.search = "";
