@@ -81,7 +81,7 @@ export function ExerciseForm({ exercise, onSubmit, onCancel }: ExerciseFormProps
         />
         <Field
           id="weight"
-          label="Peso opcional (LB)"
+          label="Peso opcional (kg)"
           value={weight}
           onChange={(event) => setWeight(event.target.value)}
           placeholder="60"
@@ -126,7 +126,7 @@ export function ExerciseForm({ exercise, onSubmit, onCancel }: ExerciseFormProps
             />
             <Field
               id="dropset-weight"
-              label="Peso dropset (LB)"
+              label="Peso dropset (kg)"
               value={dropsetWeight}
               onChange={(event) => setDropsetWeight(event.target.value)}
               placeholder="45"

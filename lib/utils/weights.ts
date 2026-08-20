@@ -5,7 +5,7 @@ export function formatWeightInput(weight: string) {
     return null;
   }
 
-  return `${stripWeightUnit(trimmed)} LB`;
+  return `${stripWeightUnit(trimmed)} kg`;
 }
 
 export function formatWeightLabel(weight: string | null) {
@@ -13,7 +13,7 @@ export function formatWeightLabel(weight: string | null) {
     return null;
   }
 
-  return `${stripWeightUnit(weight)} LB`;
+  return `${stripWeightUnit(weight)} kg`;
 }
 
 function stripWeightUnit(weight: string) {
