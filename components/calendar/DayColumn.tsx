@@ -2,7 +2,7 @@
 
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { useDroppable } from "@dnd-kit/core";
-import { Plus } from "lucide-react";
+import { Pencil, Plus } from "lucide-react";
 
 import { ExerciseCard } from "@/components/exercises/ExerciseCard";
 import { Button } from "@/components/ui/Button";
@@ -14,20 +14,24 @@ type DayColumnProps = {
     label: string;
     shortLabel: string;
   };
+  dayLabel: string;
   exercises: Exercise[];
   onAdd: (day: DayOfWeek) => void;
   onEdit: (exercise: Exercise) => void;
   onDelete: (exercise: Exercise) => void;
   onToggleComplete: (exercise: Exercise) => void;
+  onRenameDay: (day: DayOfWeek) => void;
 };
 
 export function DayColumn({
   day,
+  dayLabel,
   exercises,
   onAdd,
   onEdit,
   onDelete,
   onToggleComplete,
+  onRenameDay,
 }: DayColumnProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: day.value,
@@ -47,20 +51,28 @@ export function DayColumn({
       }`}
     >
       <div className="mb-3 flex items-center justify-between gap-3 sm:mb-4">
-        <div>
+        <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#7a857d] dark:text-[#a8b4aa]">
             {day.shortLabel}
           </p>
-          <h2 className="text-lg font-semibold text-[#17201a] sm:text-xl dark:text-[#f7fbf6]">
-            {day.label}
+          <h2 className="break-words text-lg font-semibold uppercase text-[#17201a] sm:text-xl dark:text-[#f7fbf6]">
+            {dayLabel || day.label}
           </h2>
-          <p className="mt-1 text-xs font-medium text-[#7a857d] dark:text-[#a8b4aa]">
-            Nombre de ejercicio
-          </p>
         </div>
-        <span className="rounded-full bg-[#edf1ec] px-3 py-1 text-xs font-semibold text-[#4d5b50] dark:bg-[#223027] dark:text-[#d7e0d8]">
-          {exercises.length}
-        </span>
+        <div className="flex shrink-0 items-center gap-1">
+          <button
+            type="button"
+            onClick={() => onRenameDay(day.value)}
+            className="flex size-9 items-center justify-center rounded-xl text-[#647067] transition hover:bg-[#eef3ef] dark:text-[#a8b4aa] dark:hover:bg-[#223027]"
+            aria-label={`Cambiar nombre de ${day.label}`}
+            title="Cambiar nombre"
+          >
+            <Pencil size={16} aria-hidden="true" />
+          </button>
+          <span className="rounded-full bg-[#edf1ec] px-3 py-1 text-xs font-semibold text-[#4d5b50] dark:bg-[#223027] dark:text-[#d7e0d8]">
+            {exercises.length}
+          </span>
+        </div>
       </div>
 
       <SortableContext

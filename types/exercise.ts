@@ -13,6 +13,7 @@ export type WorkoutPlan = {
   user_id: string;
   name: string;
   color: string;
+  day_labels: Partial<Record<DayOfWeek, string>>;
   created_at: string;
   updated_at: string;
 };

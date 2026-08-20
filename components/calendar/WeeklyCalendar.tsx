@@ -36,6 +36,7 @@ type WeeklyCalendarProps = {
   planId: string;
   planName: string;
   planColor?: string;
+  initialDayLabels: Partial<Record<DayOfWeek, string>>;
 };
 
 type ModalState =
@@ -47,8 +48,11 @@ export function WeeklyCalendar({
   userId,
   planId,
   planName,
+  initialDayLabels,
 }: WeeklyCalendarProps) {
   const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [dayLabels, setDayLabels] =
+    useState<Partial<Record<DayOfWeek, string>>>(initialDayLabels);
   const [modal, setModal] = useState<ModalState>(null);
   const [selectedMobileDay, setSelectedMobileDay] =
     useState<DayOfWeek>("monday");
@@ -60,7 +64,9 @@ export function WeeklyCalendar({
   const supabase = useMemo(() => createClient(), []);
   const groupedExercises = useMemo(() => groupExercises(exercises), [exercises]);
   const currentDayLabel = modal
-    ? WEEK_DAYS.find((day) => day.value === modal.day)?.label ?? ""
+    ? dayLabels[modal.day] ??
+      WEEK_DAYS.find((day) => day.value === modal.day)?.label ??
+      ""
     : "";
 
   const sensors = useSensors(
@@ -351,6 +357,45 @@ export function WeeklyCalendar({
     window.print();
   }
 
+  async function handleRenameDay(day: DayOfWeek) {
+    const dayConfig = WEEK_DAYS.find((item) => item.value === day);
+    const currentLabel = dayLabels[day] ?? "";
+    const nextLabel = window.prompt(
+      `Nombre para ${dayConfig?.label ?? day}`,
+      currentLabel,
+    );
+
+    if (nextLabel === null) {
+      return;
+    }
+
+    const cleanLabel = nextLabel.trim();
+    const previousLabels = dayLabels;
+    const nextLabels = {
+      ...dayLabels,
+      [day]: cleanLabel,
+    };
+
+    if (!cleanLabel) {
+      delete nextLabels[day];
+    }
+
+    setDayLabels(nextLabels);
+
+    const { error: renameError } = await supabase
+      .from("workout_plans")
+      .update({ day_labels: nextLabels })
+      .eq("id", planId);
+
+    if (renameError) {
+      setDayLabels(previousLabels);
+      setError("No pudimos cambiar el nombre del dia.");
+      return;
+    }
+
+    setNotice("Nombre de dia actualizado.");
+  }
+
   return (
     <section className="mx-auto max-w-[1600px] px-3 py-4 sm:px-5 md:px-8 md:py-8">
       <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
@@ -438,6 +483,7 @@ export function WeeklyCalendar({
               <DayColumn
                 key={day.value}
                 day={day}
+                dayLabel={dayLabels[day.value] ?? day.label}
                 exercises={groupedExercises[day.value]}
                 onAdd={(selectedDay) =>
                   setModal({ mode: "create", day: selectedDay, exercise: null })
@@ -451,6 +497,7 @@ export function WeeklyCalendar({
                 }
                 onDelete={handleDelete}
                 onToggleComplete={handleToggleComplete}
+                onRenameDay={handleRenameDay}
               />
             ),
           )}
@@ -462,6 +509,7 @@ export function WeeklyCalendar({
               <DayColumn
                 key={day.value}
                 day={day}
+                dayLabel={dayLabels[day.value] ?? day.label}
                 exercises={groupedExercises[day.value]}
                 onAdd={(selectedDay) =>
                   setModal({ mode: "create", day: selectedDay, exercise: null })
@@ -475,6 +523,7 @@ export function WeeklyCalendar({
                 }
                 onDelete={handleDelete}
                 onToggleComplete={handleToggleComplete}
+                onRenameDay={handleRenameDay}
               />
             ))}
           </div>
@@ -487,7 +536,7 @@ export function WeeklyCalendar({
         <div className="print-grid">
           {WEEK_DAYS.map((day) => (
             <section key={day.value}>
-              <h2>{day.label}</h2>
+              <h2>{day.shortLabel} · {dayLabels[day.value] ?? day.label}</h2>
               {groupedExercises[day.value].length > 0 ? (
                 groupedExercises[day.value].map((exercise) => (
                   <article key={exercise.id}>

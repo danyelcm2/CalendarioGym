@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { WeeklyCalendar } from "@/components/calendar/WeeklyCalendar";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { createClient } from "@/lib/supabase/server";
+import type { DayOfWeek } from "@/types/exercise";
 
 type PlanPageProps = {
   params: Promise<{
@@ -45,7 +46,14 @@ export default async function PlanPage({ params }: PlanPageProps) {
         name={profile?.name ?? null}
         username={profile?.username ?? ""}
       />
-      <WeeklyCalendar userId={user.id} planId={plan.id} planName={plan.name} />
+      <WeeklyCalendar
+        userId={user.id}
+        planId={plan.id}
+        planName={plan.name}
+        initialDayLabels={
+          (plan.day_labels ?? {}) as Partial<Record<DayOfWeek, string>>
+        }
+      />
     </main>
   );
 }

@@ -4,6 +4,7 @@
 -- Incluye:
 -- - workout_plans
 -- - color por plan
+-- - nombres personalizados por dia
 -- - exercises.plan_id
 -- - exercises.rest_minutes
 -- - exercises.completed
@@ -19,12 +20,16 @@ create table if not exists public.workout_plans (
   user_id uuid not null references auth.users(id) on delete cascade,
   name text not null,
   color text not null default 'teal',
+  day_labels jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 
 alter table public.workout_plans
   add column if not exists color text not null default 'teal';
+
+alter table public.workout_plans
+  add column if not exists day_labels jsonb not null default '{}'::jsonb;
 
 alter table public.workout_plans
   drop constraint if exists workout_plans_color_chk;

@@ -183,6 +183,7 @@ export function PlansDashboard({ userId }: PlansDashboardProps) {
         user_id: userId,
         name: `${plan.name} copia`,
         color: plan.color,
+        day_labels: plan.day_labels ?? {},
       })
       .select()
       .single();
