@@ -49,3 +49,9 @@ export type ExerciseInput = {
   dropset_weight: string | null;
   notes: string | null;
 };
+
+export type ExerciseCatalogItem = {
+  id: string;
+  name: string;
+  category: "strength" | "cardio";
+};

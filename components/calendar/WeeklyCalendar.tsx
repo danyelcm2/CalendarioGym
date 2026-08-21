@@ -31,7 +31,13 @@ import {
   type ExerciseGroups,
 } from "@/lib/utils/exercises";
 import { formatWeightLabel, type WeightUnit } from "@/lib/utils/weights";
-import { WEEK_DAYS, type DayOfWeek, type Exercise, type ExerciseInput } from "@/types/exercise";
+import {
+  WEEK_DAYS,
+  type DayOfWeek,
+  type Exercise,
+  type ExerciseCatalogItem,
+  type ExerciseInput,
+} from "@/types/exercise";
 
 type WeeklyCalendarProps = {
   userId: string;
@@ -72,6 +78,7 @@ export function WeeklyCalendar({
   initialDayLabels,
 }: WeeklyCalendarProps) {
   const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [exerciseCatalog, setExerciseCatalog] = useState<ExerciseCatalogItem[]>([]);
   const [dayLabels, setDayLabels] =
     useState<Partial<Record<DayOfWeek, string>>>(initialDayLabels);
   const [modal, setModal] = useState<ModalState>(null);
@@ -123,9 +130,25 @@ export function WeeklyCalendar({
     setStatus("idle");
   }, [supabase, planId]);
 
+  const loadExerciseCatalog = useCallback(async () => {
+    const { data, error: catalogError } = await supabase
+      .from("exercise_catalog")
+      .select("id,name,category")
+      .order("name", { ascending: true });
+
+    if (catalogError) {
+      setExerciseCatalog([]);
+      setError("No pudimos cargar el catalogo de ejercicios.");
+      return;
+    }
+
+    setExerciseCatalog((data ?? []) as ExerciseCatalogItem[]);
+  }, [supabase]);
+
   useEffect(() => {
     void loadExercises();
-  }, [loadExercises]);
+    void loadExerciseCatalog();
+  }, [loadExercises, loadExerciseCatalog]);
 
   useEffect(() => {
     if (!notice) {
@@ -588,6 +611,7 @@ export function WeeklyCalendar({
         <ExerciseModal
           exercise={modal.exercise}
           dayLabel={currentDayLabel}
+          catalog={exerciseCatalog}
           weightUnit={weightUnit}
           onClose={() => setModal(null)}
           onSubmit={modal.mode === "create" ? handleCreate : handleUpdate}

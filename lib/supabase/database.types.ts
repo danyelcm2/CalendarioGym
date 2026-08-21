@@ -35,6 +35,27 @@ export type Database = {
         };
         Relationships: [];
       };
+      exercise_catalog: {
+        Row: {
+          id: string;
+          name: string;
+          category: "strength" | "cardio";
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          category?: "strength" | "cardio";
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          category?: "strength" | "cardio";
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       workout_plans: {
         Row: {
           id: string;

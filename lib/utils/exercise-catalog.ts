@@ -1,29 +1,5 @@
 import type { DayOfWeek, ExerciseInput } from "@/types/exercise";
 
-export const EXERCISE_CATALOG = [
-  "Press banca",
-  "Press inclinado con mancuernas",
-  "Aperturas en polea",
-  "Sentadilla",
-  "Prensa de pierna",
-  "Peso muerto rumano",
-  "Hip thrust",
-  "Dominadas",
-  "Jalon al pecho",
-  "Remo con barra",
-  "Remo en maquina",
-  "Press militar",
-  "Elevaciones laterales",
-  "Curl de biceps",
-  "Extension de triceps",
-  "Plancha",
-  "Crunch en polea",
-  "Caminadora",
-  "Bicicleta estatica",
-  "Eliptica",
-  "Escaladora",
-] as const;
-
 type RoutineExercise = ExerciseInput & {
   day_of_week: DayOfWeek;
 };
@@ -59,78 +35,67 @@ function strength(
   };
 }
 
-function cardio(day_of_week: DayOfWeek, name: string, minutes: number): RoutineExercise {
-  return {
-    day_of_week,
-    name,
-    sets: 1,
-    reps: `${minutes} min`,
-    weight: null,
-    rest_minutes: null,
-    dropset_enabled: false,
-    dropset_reps: null,
-    dropset_weight: null,
-    notes: "Cardio",
-  };
-}
+const proExercises: RoutineExercise[] = [
+  strength("monday", "Press de banca", 3, "10-12"),
+  strength("monday", "Press de banca inclinado", 3, "10-12"),
+  strength("monday", "Fly", 3, "10-12"),
+  strength("monday", "Triceps cuerda", 3, "10-12"),
+  strength("monday", "Triceps frances", 3, "10-12"),
+  strength("monday", "Triceps frente", 3, "10-12"),
+  strength("tuesday", "Remada curvada", 3, "10-12"),
+  strength("tuesday", "Remada abierta", 3, "10-12"),
+  strength("tuesday", "Tirada abierta", 3, "10-12"),
+  strength("tuesday", "Rosca Scott", 3, "10-12"),
+  strength("tuesday", "Rosca martillo", 3, "10-12"),
+  strength("tuesday", "Rosca directa", 3, "10-12"),
+  strength("wednesday", "Hack en cuclillas", 3, "10-12"),
+  strength("wednesday", "Silla extensora", 3, "10-12"),
+  strength("wednesday", "Aductora", 3, "10-12"),
+  strength("wednesday", "Mesa flexora", 3, "10-12"),
+  strength("wednesday", "Silla flexora", 3, "10-12"),
+  strength("wednesday", "Prensa de piernas", 3, "10-12"),
+  strength("thursday", "Crucifijo inverso", 3, "10-12"),
+  strength("thursday", "Elevacion frontal", 3, "10-12"),
+  strength("thursday", "Elevacion lateral", 3, "10-12"),
+  strength("thursday", "Desarrollo de hombros", 3, "10-12"),
+  strength("friday", "Triceps cuerda", 3, "10-12"),
+  strength("friday", "Triceps frances", 3, "10-12"),
+  strength("friday", "Triceps frente", 3, "10-12"),
+  strength("friday", "Rosca directa", 3, "10-12"),
+  strength("friday", "Rosca martillo", 3, "10-12"),
+  strength("friday", "Rosca Scott", 3, "10-12"),
+];
+
+const beginnerExercises = proExercises.map((exercise) => ({
+  ...exercise,
+  sets: 2,
+}));
+
+const routineDayLabels: Partial<Record<DayOfWeek, string>> = {
+  monday: "Pecho y triceps",
+  tuesday: "Espalda y biceps",
+  wednesday: "Pierna completa",
+  thursday: "Hombro aislado",
+  friday: "Biceps y triceps",
+};
 
 export const ROUTINE_TEMPLATES: RoutineTemplate[] = [
   {
-    id: "beginner-full-body",
-    name: "Base principiante",
+    id: "beginner-split",
+    name: "Split principiante",
     level: "Principiante",
     color: "blue",
-    description: "Fuerza general con volumen controlado y cardio suave.",
-    dayLabels: {
-      monday: "Full body A",
-      tuesday: "Cardio",
-      wednesday: "Full body B",
-      thursday: "Movilidad",
-      friday: "Full body C",
-    },
-    exercises: [
-      strength("monday", "Sentadilla", 3, "10"),
-      strength("monday", "Press banca", 3, "10"),
-      strength("monday", "Jalon al pecho", 3, "10"),
-      cardio("tuesday", "Caminadora", 25),
-      strength("wednesday", "Peso muerto rumano", 3, "10"),
-      strength("wednesday", "Press militar", 3, "10"),
-      strength("wednesday", "Remo en maquina", 3, "12"),
-      cardio("thursday", "Bicicleta estatica", 20),
-      strength("friday", "Prensa de pierna", 3, "12"),
-      strength("friday", "Press inclinado con mancuernas", 3, "10"),
-      strength("friday", "Plancha", 3, "30 seg", 1),
-    ],
+    description: "Misma distribucion semanal con menos volumen por ejercicio.",
+    dayLabels: routineDayLabels,
+    exercises: beginnerExercises,
   },
   {
-    id: "pro-hypertrophy",
-    name: "Hipertrofia pro",
+    id: "pro-split",
+    name: "Split pro",
     level: "Pro",
     color: "purple",
-    description: "Push/pull/legs con accesorios y cardio estrategico.",
-    dayLabels: {
-      monday: "Push pesado",
-      tuesday: "Pull",
-      wednesday: "Pierna",
-      thursday: "Push volumen",
-      friday: "Full + cardio",
-    },
-    exercises: [
-      strength("monday", "Press banca", 4, "6-8", 2),
-      strength("monday", "Press militar", 4, "8"),
-      strength("monday", "Extension de triceps", 3, "12"),
-      strength("tuesday", "Dominadas", 4, "6-10", 2),
-      strength("tuesday", "Remo con barra", 4, "8-10", 2),
-      strength("tuesday", "Curl de biceps", 3, "12"),
-      strength("wednesday", "Sentadilla", 4, "6-8", 2),
-      strength("wednesday", "Peso muerto rumano", 4, "8-10", 2),
-      strength("wednesday", "Hip thrust", 3, "10"),
-      strength("thursday", "Press inclinado con mancuernas", 4, "10-12"),
-      strength("thursday", "Aperturas en polea", 3, "12-15"),
-      strength("thursday", "Elevaciones laterales", 4, "15"),
-      strength("friday", "Remo en maquina", 3, "12"),
-      strength("friday", "Prensa de pierna", 3, "12"),
-      cardio("friday", "Escaladora", 18),
-    ],
+    description: "Rutina semanal avanzada por grupos musculares.",
+    dayLabels: routineDayLabels,
+    exercises: proExercises,
   },
 ];
