@@ -56,7 +56,7 @@ export function WeightUnitToggle() {
           key={option}
           type="button"
           onClick={() => setUnit(option)}
-          className={`min-w-10 px-2 transition sm:min-w-12 sm:px-3 ${
+          className={`min-w-8 px-1.5 transition sm:min-w-12 sm:px-3 ${
             unit === option
               ? "bg-[#17201a] text-white dark:bg-[#dbeafe] dark:text-[#0f172a]"
               : "text-[#4d5b50] hover:bg-[#eef3ef] dark:text-[#b8c6d8] dark:hover:bg-[#22314a]"

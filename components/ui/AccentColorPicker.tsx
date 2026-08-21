@@ -87,11 +87,11 @@ export function AccentColorPicker() {
   }, []);
 
   return (
-    <div className="relative">
+    <div className="relative shrink-0">
       <button
         type="button"
         onClick={() => setIsOpen((current) => !current)}
-        className="flex size-10 items-center justify-center rounded-2xl border border-[#d7ded7] bg-white text-[var(--accent)] transition hover:bg-[var(--accent-soft)] dark:border-[#31445f] dark:bg-[#172033] dark:hover:bg-[var(--accent-soft-dark)]"
+        className="flex size-10 items-center justify-center rounded-2xl border border-[#d7ded7] bg-white text-[var(--accent)] transition hover:bg-[var(--accent-soft)] sm:size-11 dark:border-[#31445f] dark:bg-[#172033] dark:hover:bg-[var(--accent-soft-dark)]"
         aria-label="Cambiar color del sistema"
         title="Color del sistema"
       >
@@ -99,8 +99,7 @@ export function AccentColorPicker() {
       </button>
       {isOpen ? (
         <div
-          className="absolute right-0 top-full z-50 mt-2 grid grid-cols-5 gap-2 rounded-2xl border border-[#d7ded7] bg-white p-2 shadow-[0_18px_45px_rgba(23,32,26,0.16)] dark:border-[#31445f] dark:bg-[#111827]"
-          onMouseLeave={() => setIsOpen(false)}
+          className="fixed right-2 top-16 z-[80] w-44 rounded-2xl border border-[#d7ded7] bg-white p-1.5 shadow-[0_18px_45px_rgba(23,32,26,0.16)] sm:absolute sm:right-0 sm:top-full sm:mt-2 dark:border-[#31445f] dark:bg-[#111827]"
         >
           {ACCENTS.map((accent) => (
             <button
@@ -111,15 +110,21 @@ export function AccentColorPicker() {
                 setSelected(applyAccent(accent.id));
                 setIsOpen(false);
               }}
-              className={`size-8 rounded-full border transition ${
+              className={`flex min-h-10 w-full items-center gap-2 rounded-xl border px-2 text-left text-sm font-semibold transition ${
                 selected === accent.id
-                  ? "border-[#17201a] ring-2 ring-[var(--accent)] ring-offset-2 dark:border-[#f8fbff] dark:ring-offset-[#111827]"
-                  : "border-white/80 hover:scale-105 dark:border-[#31445f]"
+                  ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[#17201a] dark:bg-[var(--accent-soft-dark)] dark:text-[var(--accent-dark-text)]"
+                  : "border-transparent text-[#4d5b50] hover:bg-[#eef3ef] dark:text-[#dbe7f6] dark:hover:bg-[#22314a]"
               }`}
-              style={{ backgroundColor: accent.color }}
               aria-label={`Usar acento ${accent.label}`}
               title={accent.label}
-            />
+            >
+              <span
+                className="size-5 shrink-0 rounded-full border border-white/70 shadow-sm"
+                style={{ backgroundColor: accent.color }}
+                aria-hidden="true"
+              />
+              <span>{accent.label}</span>
+            </button>
           ))}
         </div>
       ) : null}
