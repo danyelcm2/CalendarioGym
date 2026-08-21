@@ -8,8 +8,8 @@
 }
 
 :root.dark {
-  --background: #0f1511;
-  --foreground: #f7fbf6;
+  --background: #162235;
+  --foreground: #f8fbff;
 }
 
 * {
@@ -31,8 +31,8 @@ body {
 
 .dark body {
   background:
-    radial-gradient(circle at top left, rgba(20, 184, 166, 0.16), transparent 30rem),
-    linear-gradient(180deg, #121b15 0%, var(--background) 58%, #0b100d 100%);
+    radial-gradient(circle at top left, rgba(96, 165, 250, 0.18), transparent 30rem),
+    linear-gradient(180deg, #1b2b42 0%, var(--background) 58%, #111827 100%);
 }
 
 button,

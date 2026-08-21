@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { CheckCircle2, KeyRound, LogIn, Mail, UserPlus } from "lucide-react";
+import { CheckCircle2, LogIn, Mail, UserPlus } from "lucide-react";
 
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
@@ -10,7 +10,7 @@ import { StatusMessage } from "@/components/ui/StatusMessage";
 import { createClient } from "@/lib/supabase/client";
 
 type AuthMode = "login" | "signup";
-type FormView = AuthMode | "reset" | "update-password";
+type FormView = AuthMode | "reset";
 
 function normalizeUsername(value: string) {
   return value.trim().toLowerCase();
@@ -22,6 +22,7 @@ export function LoginForm() {
   const redirectedFrom = searchParams.get("redirectedFrom");
   const isVerified = searchParams.get("verified") === "1";
   const verificationFailed = searchParams.get("verified") === "error";
+  const passwordUpdated = searchParams.get("password") === "updated";
   const redirectPath =
     redirectedFrom?.startsWith("/") && !redirectedFrom.startsWith("//")
       ? redirectedFrom
@@ -35,20 +36,6 @@ export function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    const supabase = createClient();
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY") {
-        setMode("update-password");
-        setMessage("Ingresa tu nueva contrasena.");
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
@@ -57,32 +44,13 @@ export function LoginForm() {
 
     const supabase = createClient();
 
-    if (mode === "update-password") {
-      const { error: updateError } = await supabase.auth.updateUser({
-        password,
-      });
-
-      setIsSubmitting(false);
-
-      if (updateError) {
-        setError("No pudimos cambiar tu contrasena.");
-        return;
-      }
-
-      await supabase.auth.signOut();
-      setMessage("Contrasena actualizada. Ya puedes entrar.");
-      setPassword("");
-      setMode("login");
-      return;
-    }
-
     if (mode === "reset") {
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(
         email,
         {
           redirectTo:
             typeof window !== "undefined"
-              ? `${window.location.origin}/auth`
+              ? `${window.location.origin}/auth/reset-password`
               : undefined,
         },
       );
@@ -166,14 +134,14 @@ export function LoginForm() {
   if (isVerified) {
     return (
       <div className="space-y-5">
-        <div className="rounded-[22px] border border-[#c7e7d4] bg-[#f1fbf5] p-5 text-center dark:border-[#235c39] dark:bg-[#13251a]">
-          <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-2xl bg-[#1f6a3d] text-white dark:bg-[#9ee4b4] dark:text-[#101711]">
+        <div className="rounded-[22px] border border-[#c7e7d4] bg-[#f1fbf5] p-5 text-center dark:border-[#3b82f6] dark:bg-[#1e3a5f]">
+          <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-2xl bg-[#1f6a3d] text-white dark:bg-[#bfdbfe] dark:text-[#0f172a]">
             <CheckCircle2 size={24} aria-hidden="true" />
           </div>
-          <h2 className="text-xl font-semibold text-[#17201a] dark:text-[#f7fbf6]">
+          <h2 className="text-xl font-semibold text-[#17201a] dark:text-[#f8fbff]">
             Verificacion exitosa
           </h2>
-          <p className="mt-2 text-sm leading-6 text-[#4d5b50] dark:text-[#c5d0c7]">
+          <p className="mt-2 text-sm leading-6 text-[#4d5b50] dark:text-[#dbe7f6]">
             Tu cuenta quedo activa. Ya puedes continuar a tu calendario de
             entrenamientos.
           </p>
@@ -243,7 +211,7 @@ export function LoginForm() {
       {mode === "signup" || mode === "reset" ? (
         <Field
           id="email"
-          label="Correo para recuperar contrasena"
+          label={mode === "reset" ? "Correo para recuperar contrasena" : "Correo"}
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="tu@email.com"
@@ -256,7 +224,7 @@ export function LoginForm() {
       {mode !== "reset" ? (
         <Field
           id="password"
-          label={mode === "update-password" ? "Nueva contrasena" : "Contrasena"}
+          label="Contrasena"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           placeholder="Minimo 6 caracteres"
@@ -268,6 +236,11 @@ export function LoginForm() {
       ) : null}
 
       {error ? <StatusMessage type="error">{error}</StatusMessage> : null}
+      {passwordUpdated ? (
+        <StatusMessage type="success">
+          Contrasena actualizada. Ya puedes iniciar sesion.
+        </StatusMessage>
+      ) : null}
       {message ? <StatusMessage type="success">{message}</StatusMessage> : null}
 
       <Button
@@ -279,8 +252,6 @@ export function LoginForm() {
             <LogIn size={18} />
           ) : mode === "reset" ? (
             <Mail size={18} />
-          ) : mode === "update-password" ? (
-            <KeyRound size={18} />
           ) : (
             <UserPlus size={18} />
           )
@@ -290,11 +261,9 @@ export function LoginForm() {
           ? "Procesando..."
           : mode === "reset"
             ? "Enviar enlace"
-            : mode === "update-password"
-              ? "Cambiar contrasena"
-              : mode === "login"
-                ? "Iniciar sesion"
-                : "Crear cuenta"}
+            : mode === "login"
+              ? "Iniciar sesion"
+              : "Crear cuenta"}
       </Button>
 
       {mode === "login" ? (
@@ -305,7 +274,7 @@ export function LoginForm() {
             setMessage(null);
             setMode("reset");
           }}
-          className="w-full rounded-2xl px-4 py-2 text-sm font-semibold text-[#4d5b50] transition hover:bg-[#eef3ef] dark:text-[#c5d0c7] dark:hover:bg-[#1d2a22]"
+          className="w-full rounded-2xl px-4 py-2 text-sm font-semibold text-[#4d5b50] transition hover:bg-[#eef3ef] dark:text-[#dbe7f6] dark:hover:bg-[#22314a]"
         >
           Cambiar o recuperar contrasena
         </button>
@@ -318,7 +287,7 @@ export function LoginForm() {
           setMessage(null);
           setMode(mode === "login" ? "signup" : "login");
         }}
-        className="w-full rounded-2xl px-4 py-3 text-sm font-semibold text-[#4d5b50] transition hover:bg-[#eef3ef] dark:text-[#c5d0c7] dark:hover:bg-[#1d2a22]"
+        className="w-full rounded-2xl px-4 py-3 text-sm font-semibold text-[#4d5b50] transition hover:bg-[#eef3ef] dark:text-[#dbe7f6] dark:hover:bg-[#22314a]"
       >
         {mode === "login"
           ? "Crear cuenta nueva"

@@ -22,6 +22,7 @@ import { DayColumn } from "@/components/calendar/DayColumn";
 import { ExerciseModal } from "@/components/exercises/ExerciseModal";
 import { Button } from "@/components/ui/Button";
 import { StatusMessage } from "@/components/ui/StatusMessage";
+import { useWeightUnit } from "@/components/ui/WeightUnitToggle";
 import { createClient } from "@/lib/supabase/client";
 import {
   flattenGroups,
@@ -29,7 +30,7 @@ import {
   isDayOfWeek,
   type ExerciseGroups,
 } from "@/lib/utils/exercises";
-import { formatWeightLabel } from "@/lib/utils/weights";
+import { formatWeightLabel, type WeightUnit } from "@/lib/utils/weights";
 import { WEEK_DAYS, type DayOfWeek, type Exercise, type ExerciseInput } from "@/types/exercise";
 
 type WeeklyCalendarProps = {
@@ -45,12 +46,13 @@ type ModalState =
   | { mode: "edit"; day: DayOfWeek; exercise: Exercise }
   | null;
 
-function getExercisePrintSummary(exercise: Exercise) {
-  const weightLabel = formatWeightLabel(exercise.weight);
-  const dropsetWeightLabel = formatWeightLabel(exercise.dropset_weight);
+function getExercisePrintSummary(exercise: Exercise, weightUnit: WeightUnit) {
+  const weightLabel = formatWeightLabel(exercise.weight, weightUnit);
+  const dropsetWeightLabel = formatWeightLabel(exercise.dropset_weight, weightUnit);
+  const isCardio = exercise.notes?.toLowerCase().includes("cardio") ?? false;
 
   return [
-    `${exercise.sets} x ${exercise.reps}`,
+    isCardio ? `${exercise.reps} cardio` : `${exercise.sets} x ${exercise.reps}`,
     weightLabel,
     exercise.rest_minutes ? `${exercise.rest_minutes} min` : null,
     exercise.dropset_enabled
@@ -79,6 +81,7 @@ export function WeeklyCalendar({
   const [status, setStatus] = useState<"idle" | "loading" | "saving">("loading");
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { unit: weightUnit } = useWeightUnit();
 
   const supabase = useMemo(() => createClient(), []);
   const groupedExercises = useMemo(() => groupExercises(exercises), [exercises]);
@@ -432,10 +435,10 @@ export function WeeklyCalendar({
             <Dumbbell size={17} aria-hidden="true" />
             <span>{status === "saving" ? "Guardando cambios" : "Plan semanal"}</span>
           </div>
-          <h2 className="text-balance text-3xl font-semibold tracking-normal text-[#17201a] sm:text-4xl dark:text-[#f7fbf6]">
+          <h2 className="text-balance text-3xl font-semibold tracking-normal text-[#17201a] sm:text-4xl dark:text-[#f8fbff]">
             {planName}
           </h2>
-          <p className="mt-2 text-sm leading-6 text-[#647067] dark:text-[#a8b4aa]">
+          <p className="mt-2 text-sm leading-6 text-[#647067] dark:text-[#b8c6d8]">
             Lunes a viernes · {exercises.length} ejercicios
           </p>
         </div>
@@ -477,16 +480,16 @@ export function WeeklyCalendar({
                     onClick={() => setSelectedMobileDay(day.value)}
                     className={`min-h-11 rounded-2xl border px-4 text-sm font-semibold transition ${
                       isSelected
-                        ? "border-[#17201a] bg-[#17201a] text-white shadow-sm dark:border-[#f7fbf6] dark:bg-[#f7fbf6] dark:text-[#101711]"
-                        : "border-[#d7ded7] bg-white text-[#4d5b50] dark:border-[#334238] dark:bg-[#162019] dark:text-[#d7e0d8]"
+                        ? "border-[#17201a] bg-[#17201a] text-white shadow-sm dark:border-[#dbeafe] dark:bg-[#dbeafe] dark:text-[#0f172a]"
+                        : "border-[#d7ded7] bg-white text-[#4d5b50] dark:border-[#31445f] dark:bg-[#172033] dark:text-[#dbe7f6]"
                     }`}
                   >
                     {day.shortLabel}
                     <span
                       className={`ml-2 rounded-full px-2 py-0.5 text-xs ${
                         isSelected
-                          ? "bg-white/[0.14] text-white dark:bg-[#101711]/[0.1] dark:text-[#101711]"
-                          : "bg-[#eef3ef] text-[#4d5b50] dark:bg-[#223027] dark:text-[#d7e0d8]"
+                          ? "bg-white/[0.14] text-white dark:bg-[#111827]/[0.1] dark:text-[#0f172a]"
+                          : "bg-[#eef3ef] text-[#4d5b50] dark:bg-[#22314a] dark:text-[#dbe7f6]"
                       }`}
                     >
                       {groupedExercises[day.value].length}
@@ -504,6 +507,7 @@ export function WeeklyCalendar({
                 day={day}
                 dayLabel={dayLabels[day.value] ?? day.label}
                 exercises={groupedExercises[day.value]}
+                weightUnit={weightUnit}
                 onAdd={(selectedDay) =>
                   setModal({ mode: "create", day: selectedDay, exercise: null })
                 }
@@ -530,6 +534,7 @@ export function WeeklyCalendar({
                 day={day}
                 dayLabel={dayLabels[day.value] ?? day.label}
                 exercises={groupedExercises[day.value]}
+                weightUnit={weightUnit}
                 onAdd={(selectedDay) =>
                   setModal({ mode: "create", day: selectedDay, exercise: null })
                 }
@@ -563,7 +568,7 @@ export function WeeklyCalendar({
                       {exercise.completed ? "[x] " : ""}
                       {exercise.name}
                     </h3>
-                    <p>{getExercisePrintSummary(exercise)}</p>
+                    <p>{getExercisePrintSummary(exercise, weightUnit)}</p>
                     {exercise.notes ? <p>{exercise.notes}</p> : null}
                   </article>
                 ))
@@ -583,6 +588,7 @@ export function WeeklyCalendar({
         <ExerciseModal
           exercise={modal.exercise}
           dayLabel={currentDayLabel}
+          weightUnit={weightUnit}
           onClose={() => setModal(null)}
           onSubmit={modal.mode === "create" ? handleCreate : handleUpdate}
         />

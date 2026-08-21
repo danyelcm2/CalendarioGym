@@ -7,9 +7,9 @@ const styles = {
   error:
     "border-[#f2c6be] bg-[#fff6f4] text-[#a63d2b] dark:border-[#6a3028] dark:bg-[#2a1714] dark:text-[#ff9a88]",
   success:
-    "border-[#c7e7d4] bg-[#f1fbf5] text-[#1f6a3d] dark:border-[#235c39] dark:bg-[#13251a] dark:text-[#9ee4b4]",
+    "border-[#c7e7d4] bg-[#f1fbf5] text-[#1f6a3d] dark:border-[#3b82f6] dark:bg-[#1e3a5f] dark:text-[#bfdbfe]",
   info:
-    "border-[#d7ded7] bg-white text-[#4d5b50] dark:border-[#334238] dark:bg-[#162019] dark:text-[#d7e0d8]",
+    "border-[#d7ded7] bg-white text-[#4d5b50] dark:border-[#31445f] dark:bg-[#172033] dark:text-[#dbe7f6]",
 };
 
 export function StatusMessage({ type = "info", children }: StatusMessageProps) {

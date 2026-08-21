@@ -16,7 +16,12 @@ import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
 import { Modal } from "@/components/ui/Modal";
 import { StatusMessage } from "@/components/ui/StatusMessage";
+import { useWeightUnit } from "@/components/ui/WeightUnitToggle";
 import { createClient } from "@/lib/supabase/client";
+import {
+  ROUTINE_TEMPLATES,
+  type RoutineTemplate,
+} from "@/lib/utils/exercise-catalog";
 import {
   getPersonalRecords,
   getPlanColor,
@@ -25,7 +30,8 @@ import {
   PLAN_COLORS,
   type PlanColor,
 } from "@/lib/utils/plans";
-import type { Exercise, WorkoutPlan } from "@/types/exercise";
+import { formatWeightLabel } from "@/lib/utils/weights";
+import type { DayOfWeek, Exercise, WorkoutPlan } from "@/types/exercise";
 
 type PlansDashboardProps = {
   userId: string;
@@ -47,7 +53,8 @@ export function PlansDashboard({ userId }: PlansDashboardProps) {
   const [notice, setNotice] = useState<string | null>(null);
 
   const supabase = useMemo(() => createClient(), []);
-  const personalRecords = useMemo(() => getPersonalRecords(exercises), [exercises]);
+  const { unit: weightUnit } = useWeightUnit();
+  const personalRecords = useMemo(() => getPersonalRecords(exercises, 3), [exercises]);
 
   const loadPlans = useCallback(async () => {
     setStatus("loading");
@@ -239,6 +246,62 @@ export function PlansDashboard({ userId }: PlansDashboardProps) {
     setNotice("Plan duplicado.");
   }
 
+  async function handleCreateTemplate(template: RoutineTemplate) {
+    setStatus("saving");
+    setError(null);
+
+    const { data: newPlan, error: planError } = await supabase
+      .from("workout_plans")
+      .insert({
+        user_id: userId,
+        name: template.name,
+        color: template.color,
+        day_labels: template.dayLabels,
+      })
+      .select()
+      .single();
+
+    if (planError || !newPlan) {
+      setStatus("idle");
+      setError("No pudimos agregar la rutina.");
+      return;
+    }
+
+    const dayPositions = new Map<DayOfWeek, number>();
+    const templateExercises = template.exercises.map((exercise) => {
+      const position = dayPositions.get(exercise.day_of_week) ?? 0;
+      dayPositions.set(exercise.day_of_week, position + 1);
+
+      return {
+        ...exercise,
+        user_id: userId,
+        plan_id: newPlan.id,
+        position,
+        completed: false,
+      };
+    });
+
+    const { data: createdExercises, error: exerciseError } = await supabase
+      .from("exercises")
+      .insert(templateExercises)
+      .select();
+
+    setStatus("idle");
+
+    if (exerciseError) {
+      await supabase.from("workout_plans").delete().eq("id", newPlan.id);
+      setError("No pudimos agregar los ejercicios de la rutina.");
+      return;
+    }
+
+    setPlans((current) => [newPlan as WorkoutPlan, ...current]);
+    setExercises((current) => [
+      ...((createdExercises ?? []) as Exercise[]),
+      ...current,
+    ]);
+    setNotice("Rutina agregada a tus planes.");
+  }
+
   async function handleDelete(plan: WorkoutPlan) {
     const confirmed = window.confirm(`Eliminar el plan "${plan.name}"?`);
 
@@ -277,10 +340,10 @@ export function PlansDashboard({ userId }: PlansDashboardProps) {
           <p className="mb-2 text-sm font-semibold text-[#4f8f7c]">
             Mis planes
           </p>
-          <h2 className="text-3xl font-semibold text-[#17201a] dark:text-[#f7fbf6]">
+          <h2 className="text-3xl font-semibold text-[#17201a] dark:text-[#f8fbff]">
             Rutinas semanales
           </h2>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-[#647067] dark:text-[#a8b4aa]">
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-[#647067] dark:text-[#b8c6d8]">
             Organiza diferentes rutinas y abre la que estes entrenando ahora.
           </p>
         </div>
@@ -294,37 +357,77 @@ export function PlansDashboard({ userId }: PlansDashboardProps) {
         </Button>
       </div>
 
-      <div className="mb-5 rounded-[24px] border border-white/80 bg-white/[0.72] p-4 shadow-sm dark:border-[#26342b] dark:bg-[#162019]/[0.72] sm:p-5">
-        <div className="mb-4 flex items-center gap-2">
+      <div className="mb-5 grid gap-3 md:grid-cols-2">
+        {ROUTINE_TEMPLATES.map((template) => (
+          <article
+            key={template.id}
+            className="rounded-[20px] border border-white/80 bg-white/[0.72] p-4 shadow-sm dark:border-[#31445f] dark:bg-[#172033]/[0.72]"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#4f8f7c] dark:text-[#93c5fd]">
+                  {template.level}
+                </p>
+                <h3 className="mt-1 text-base font-semibold text-[#17201a] dark:text-[#f8fbff]">
+                  {template.name}
+                </h3>
+                <p className="mt-1 text-sm leading-5 text-[#647067] dark:text-[#b8c6d8]">
+                  {template.description}
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="secondary"
+                disabled={status === "saving"}
+                onClick={() => handleCreateTemplate(template)}
+                icon={<Plus size={17} aria-hidden="true" />}
+                className="shrink-0"
+              >
+                Agregar
+              </Button>
+            </div>
+          </article>
+        ))}
+      </div>
+
+      <div className="mb-5 rounded-[20px] border border-white/80 bg-white/[0.72] p-4 shadow-sm dark:border-[#31445f] dark:bg-[#172033]/[0.72]">
+        <div className="mb-3 flex items-center gap-2">
           <Trophy size={18} className="text-[#f59e0b]" aria-hidden="true" />
-          <h3 className="text-base font-semibold text-[#17201a] dark:text-[#f7fbf6]">
+          <h3 className="text-base font-semibold text-[#17201a] dark:text-[#f8fbff]">
             Records personales
           </h3>
         </div>
         {personalRecords.length > 0 ? (
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-2 md:grid-cols-3">
             {personalRecords.map((record) => (
               <div
                 key={record.name}
-                className="rounded-2xl border border-[#e2e8e2] bg-white p-4 dark:border-[#334238] dark:bg-[#101711]"
+                className="rounded-2xl border border-[#e2e8e2] bg-white px-3 py-2.5 dark:border-[#31445f] dark:bg-[#111827]"
               >
-                <p className="truncate text-sm font-semibold text-[#17201a] dark:text-[#f7fbf6]">
-                  {record.name}
-                </p>
-                <p className="mt-2 text-2xl font-semibold text-[#17201a] dark:text-[#f7fbf6]">
-                  {record.weight ? `${record.weight} kg` : "PR"}
-                </p>
-                <p className="mt-1 text-xs text-[#647067] dark:text-[#a8b4aa]">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="truncate text-sm font-semibold text-[#17201a] dark:text-[#f8fbff]">
+                    {record.name}
+                  </p>
+                  <p className="shrink-0 text-sm font-semibold text-[#17201a] dark:text-[#f8fbff]">
+                    {record.weight
+                      ? formatWeightLabel(`${record.weight} kg`, weightUnit)
+                      : "PR"}
+                  </p>
+                </div>
+                <p className="mt-1 truncate text-xs text-[#647067] dark:text-[#b8c6d8]">
                   {record.sets} x {record.reps}
                   {record.estimatedMax
-                    ? ` · estimado ${record.estimatedMax.toFixed(1)} kg`
+                    ? ` · est. ${formatWeightLabel(
+                        `${record.estimatedMax} kg`,
+                        weightUnit,
+                      )}`
                     : ""}
                 </p>
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-sm leading-6 text-[#647067] dark:text-[#a8b4aa]">
+          <p className="text-sm leading-6 text-[#647067] dark:text-[#b8c6d8]">
             Agrega peso y repeticiones a tus ejercicios para detectar tus mejores marcas.
           </p>
         )}
@@ -337,14 +440,14 @@ export function PlansDashboard({ userId }: PlansDashboardProps) {
       </div>
 
       {plans.length === 0 && status !== "loading" ? (
-        <div className="rounded-[24px] border border-dashed border-[#cfd8cf] bg-white/[0.72] p-8 text-center shadow-sm dark:border-[#334238] dark:bg-[#162019]/[0.72]">
-          <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-2xl bg-[#17201a] text-white dark:bg-[#f7fbf6] dark:text-[#101711]">
+        <div className="rounded-[24px] border border-dashed border-[#cfd8cf] bg-white/[0.72] p-8 text-center shadow-sm dark:border-[#31445f] dark:bg-[#172033]/[0.72]">
+          <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-2xl bg-[#17201a] text-white dark:bg-[#dbeafe] dark:text-[#0f172a]">
             <Dumbbell size={23} aria-hidden="true" />
           </div>
-          <h3 className="text-xl font-semibold text-[#17201a] dark:text-[#f7fbf6]">
+          <h3 className="text-xl font-semibold text-[#17201a] dark:text-[#f8fbff]">
             Crea tu primer plan
           </h3>
-          <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#647067] dark:text-[#a8b4aa]">
+          <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#647067] dark:text-[#b8c6d8]">
             Puedes tener una rutina de fuerza, hipertrofia, volumen o cualquier
             estructura semanal que uses.
           </p>
@@ -360,7 +463,7 @@ export function PlansDashboard({ userId }: PlansDashboardProps) {
               return (
                 <article
                   key={plan.id}
-                  className={`rounded-[24px] border border-t-4 border-white/80 bg-white/[0.76] p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-[#26342b] dark:bg-[#162019]/[0.78] ${color.border}`}
+                  className={`rounded-[24px] border border-t-4 border-white/80 bg-white/[0.76] p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-[#31445f] dark:bg-[#172033]/[0.78] ${color.border}`}
                 >
                   <div className="mb-5 flex items-start justify-between gap-4">
                     <div className="min-w-0">
@@ -369,10 +472,10 @@ export function PlansDashboard({ userId }: PlansDashboardProps) {
                       >
                         {color.label}
                       </span>
-                      <h3 className="break-words text-xl font-semibold text-[#17201a] dark:text-[#f7fbf6]">
+                      <h3 className="break-words text-xl font-semibold text-[#17201a] dark:text-[#f8fbff]">
                         {plan.name}
                       </h3>
-                      <p className="mt-2 text-sm text-[#647067] dark:text-[#a8b4aa]">
+                      <p className="mt-2 text-sm text-[#647067] dark:text-[#b8c6d8]">
                         5 dias · {exerciseCount} ejercicios
                       </p>
                     </div>
@@ -380,7 +483,7 @@ export function PlansDashboard({ userId }: PlansDashboardProps) {
                       <button
                         type="button"
                         onClick={() => handleDuplicate(plan)}
-                        className="flex size-9 items-center justify-center rounded-xl text-[#647067] transition hover:bg-[#eef3ef] dark:text-[#a8b4aa] dark:hover:bg-[#223027]"
+                        className="flex size-9 items-center justify-center rounded-xl text-[#647067] transition hover:bg-[#eef3ef] dark:text-[#b8c6d8] dark:hover:bg-[#22314a]"
                         aria-label={`Duplicar ${plan.name}`}
                         title="Duplicar"
                       >
@@ -389,7 +492,7 @@ export function PlansDashboard({ userId }: PlansDashboardProps) {
                       <button
                         type="button"
                         onClick={() => openRenameModal(plan)}
-                        className="flex size-9 items-center justify-center rounded-xl text-[#647067] transition hover:bg-[#eef3ef] dark:text-[#a8b4aa] dark:hover:bg-[#223027]"
+                        className="flex size-9 items-center justify-center rounded-xl text-[#647067] transition hover:bg-[#eef3ef] dark:text-[#b8c6d8] dark:hover:bg-[#22314a]"
                         aria-label={`Renombrar ${plan.name}`}
                         title="Renombrar"
                       >
@@ -408,7 +511,7 @@ export function PlansDashboard({ userId }: PlansDashboardProps) {
                   </div>
                   <Link
                     href={`/plans/${plan.id}`}
-                    className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl bg-[#17201a] px-4 text-sm font-semibold text-white transition hover:bg-[#263228] dark:bg-[#f7fbf6] dark:text-[#101711] dark:hover:bg-[#dbe7dd]"
+                    className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl bg-[#17201a] px-4 text-sm font-semibold text-white transition hover:bg-[#263228] dark:bg-[#dbeafe] dark:text-[#0f172a] dark:hover:bg-[#bfdbfe]"
                   >
                     Abrir plan
                     <MoreHorizontal size={17} aria-hidden="true" />
@@ -434,7 +537,7 @@ export function PlansDashboard({ userId }: PlansDashboardProps) {
               required
             />
             <div>
-              <p className="mb-2 text-sm font-medium text-[#354239] dark:text-[#d7e0d8]">
+              <p className="mb-2 text-sm font-medium text-[#354239] dark:text-[#dbe7f6]">
                 Color del plan
               </p>
               <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
@@ -445,8 +548,8 @@ export function PlansDashboard({ userId }: PlansDashboardProps) {
                     onClick={() => setPlanColor(color.value)}
                     className={`flex min-h-11 items-center justify-center gap-2 rounded-2xl border px-3 text-sm font-semibold transition ${
                       planColor === color.value
-                        ? "border-[#17201a] bg-[#17201a] text-white dark:border-[#f7fbf6] dark:bg-[#f7fbf6] dark:text-[#101711]"
-                        : "border-[#d7ded7] bg-white text-[#4d5b50] dark:border-[#334238] dark:bg-[#101711] dark:text-[#d7e0d8]"
+                        ? "border-[#17201a] bg-[#17201a] text-white dark:border-[#dbeafe] dark:bg-[#dbeafe] dark:text-[#0f172a]"
+                        : "border-[#d7ded7] bg-white text-[#4d5b50] dark:border-[#31445f] dark:bg-[#111827] dark:text-[#dbe7f6]"
                     }`}
                   >
                     <span className={`size-3 rounded-full ${color.dot}`} />

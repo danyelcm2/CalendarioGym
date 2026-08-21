@@ -1,4 +1,5 @@
 import type { Exercise, WorkoutPlan } from "@/types/exercise";
+import { parseWeightInKilograms } from "@/lib/utils/weights";
 
 export const PLAN_COLORS = [
   {
@@ -85,15 +86,6 @@ function normalizeExerciseName(name: string) {
   return name.trim().toLowerCase();
 }
 
-function parseWeight(weight: string | null) {
-  if (!weight) {
-    return null;
-  }
-
-  const match = weight.replace(",", ".").match(/\d+(\.\d+)?/);
-  return match ? Number(match[0]) : null;
-}
-
 function parseReps(reps: string) {
   const match = reps.match(/\d+/);
   return match ? Number(match[0]) : null;
@@ -111,7 +103,7 @@ export function getPersonalRecords(exercises: Exercise[], limit = 4) {
   const records = new Map<string, PersonalRecord>();
 
   exercises.forEach((exercise) => {
-    const weight = parseWeight(exercise.weight);
+    const weight = parseWeightInKilograms(exercise.weight);
     const reps = parseReps(exercise.reps);
 
     if (!weight && !reps) {

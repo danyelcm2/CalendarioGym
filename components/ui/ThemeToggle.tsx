@@ -46,7 +46,7 @@ export function ThemeToggle() {
     <button
       type="button"
       onClick={toggleTheme}
-      className="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-[#d7ded7] bg-white text-[#17201a] transition hover:bg-[#f3f6f2] dark:border-[#334238] dark:bg-[#162019] dark:text-[#f7fbf6] dark:hover:bg-[#1d2a22]"
+      className="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-[#d7ded7] bg-white text-[#17201a] transition hover:bg-[#f3f6f2] dark:border-[#31445f] dark:bg-[#172033] dark:text-[#f8fbff] dark:hover:bg-[#22314a]"
       aria-label={theme === "dark" ? "Activar modo claro" : "Activar modo oscuro"}
       title={theme === "dark" ? "Modo claro" : "Modo oscuro"}
     >

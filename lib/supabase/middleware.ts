@@ -35,6 +35,7 @@ export async function updateSession(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
   const showVerification = request.nextUrl.searchParams.get("verified") === "1";
+  const isPasswordResetRoute = pathname === "/auth/reset-password";
   const isProtected = protectedRoutes.some((route) => pathname.startsWith(route));
   const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
 
@@ -45,7 +46,11 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (user && ((isAuthRoute && !showVerification) || pathname === "/")) {
+  if (
+    user &&
+    !isPasswordResetRoute &&
+    ((isAuthRoute && !showVerification) || pathname === "/")
+  ) {
     const url = request.nextUrl.clone();
     url.pathname = "/plans";
     url.search = "";

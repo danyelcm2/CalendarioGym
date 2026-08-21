@@ -6,6 +6,7 @@ import { Dumbbell, LogOut } from "lucide-react";
 
 import { Button } from "@/components/ui/Button";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { WeightUnitToggle } from "@/components/ui/WeightUnitToggle";
 import { createClient } from "@/lib/supabase/client";
 
 type AppHeaderProps = {
@@ -33,28 +34,29 @@ export function AppHeader({
   }
 
   return (
-    <header className="border-b border-white/80 bg-white/[0.78] backdrop-blur dark:border-[#26342b] dark:bg-[#101711]/[0.82]">
+    <header className="border-b border-white/80 bg-white/[0.78] backdrop-blur dark:border-[#31445f] dark:bg-[#111827]/[0.82]">
       <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-3 px-3 py-3 sm:px-5 md:px-8 md:py-4">
         <div className="flex items-center gap-3">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-[#17201a] text-white sm:size-11 dark:bg-[#f7fbf6] dark:text-[#101711]">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-[#17201a] text-white sm:size-11 dark:bg-[#dbeafe] dark:text-[#0f172a]">
             <Dumbbell size={21} aria-hidden="true" />
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-medium text-[#647067] dark:text-[#a8b4aa]">Calendario Gym</p>
-            <h1 className="truncate text-lg font-semibold text-[#17201a] sm:text-xl dark:text-[#f7fbf6]">
+            <p className="text-sm font-medium text-[#647067] dark:text-[#b8c6d8]">Calendario Gym</p>
+            <h1 className="truncate text-lg font-semibold text-[#17201a] sm:text-xl dark:text-[#f8fbff]">
               {title}
             </h1>
           </div>
         </div>
-        <div className="flex min-w-0 items-center gap-3">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           <div className="hidden min-w-0 text-right sm:block">
-            <p className="truncate text-sm font-semibold text-[#17201a] dark:text-[#f7fbf6]">
+            <p className="truncate text-sm font-semibold text-[#17201a] dark:text-[#f8fbff]">
               {name || username}
             </p>
-            <p className="truncate text-xs text-[#647067] dark:text-[#a8b4aa]">
+            <p className="truncate text-xs text-[#647067] dark:text-[#b8c6d8]">
               @{username || email}
             </p>
           </div>
+          <WeightUnitToggle />
           <ThemeToggle />
           <Button
             type="button"

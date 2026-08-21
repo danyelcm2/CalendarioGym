@@ -4,20 +4,45 @@ import { useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { Field, TextArea } from "@/components/ui/Field";
-import { formatWeightInput } from "@/lib/utils/weights";
+import { EXERCISE_CATALOG } from "@/lib/utils/exercise-catalog";
+import {
+  formatWeightInput,
+  getWeightInputValue,
+  type WeightUnit,
+} from "@/lib/utils/weights";
 import type { Exercise, ExerciseInput } from "@/types/exercise";
 
 type ExerciseFormProps = {
   exercise?: Exercise | null;
+  weightUnit: WeightUnit;
   onSubmit: (input: ExerciseInput) => Promise<void>;
   onCancel: () => void;
 };
 
-export function ExerciseForm({ exercise, onSubmit, onCancel }: ExerciseFormProps) {
+function isCardioExercise(exercise?: Exercise | null) {
+  return exercise?.notes?.toLowerCase().includes("cardio") ?? false;
+}
+
+function getCardioMinutes(exercise?: Exercise | null) {
+  const match = exercise?.reps.match(/\d+/);
+  return match ? match[0] : "20";
+}
+
+export function ExerciseForm({
+  exercise,
+  weightUnit,
+  onSubmit,
+  onCancel,
+}: ExerciseFormProps) {
+  const [exerciseKind, setExerciseKind] = useState<"strength" | "cardio">(
+    isCardioExercise(exercise) ? "cardio" : "strength",
+  );
   const [name, setName] = useState(exercise?.name ?? "");
   const [sets, setSets] = useState(String(exercise?.sets ?? 4));
   const [reps, setReps] = useState(exercise?.reps ?? "10");
-  const [weight, setWeight] = useState(exercise?.weight ?? "");
+  const [weight, setWeight] = useState(
+    getWeightInputValue(exercise?.weight, weightUnit),
+  );
   const [restMinutes, setRestMinutes] = useState(
     exercise?.rest_minutes ? String(exercise.rest_minutes) : "",
   );
@@ -26,114 +51,172 @@ export function ExerciseForm({ exercise, onSubmit, onCancel }: ExerciseFormProps
   );
   const [dropsetReps, setDropsetReps] = useState(exercise?.dropset_reps ?? "");
   const [dropsetWeight, setDropsetWeight] = useState(
-    exercise?.dropset_weight ?? "",
+    getWeightInputValue(exercise?.dropset_weight, weightUnit),
   );
   const [notes, setNotes] = useState(exercise?.notes ?? "");
+  const [cardioMinutes, setCardioMinutes] = useState(getCardioMinutes(exercise));
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsSubmitting(true);
 
-    await onSubmit({
-      name: name.trim(),
-      sets: Number(sets),
-      reps: reps.trim(),
-      weight: formatWeightInput(weight),
-      rest_minutes: restMinutes ? Number(restMinutes) : null,
-      dropset_enabled: dropsetEnabled,
-      dropset_reps: dropsetEnabled ? dropsetReps.trim() || null : null,
-      dropset_weight: dropsetEnabled ? formatWeightInput(dropsetWeight) : null,
-      notes: notes.trim() || null,
-    });
+    if (exerciseKind === "cardio") {
+      await onSubmit({
+        name: name.trim(),
+        sets: 1,
+        reps: `${cardioMinutes} min`,
+        weight: null,
+        rest_minutes: null,
+        dropset_enabled: false,
+        dropset_reps: null,
+        dropset_weight: null,
+        notes: notes.trim() || "Cardio",
+      });
+    } else {
+      await onSubmit({
+        name: name.trim(),
+        sets: Number(sets),
+        reps: reps.trim(),
+        weight: formatWeightInput(weight, weightUnit),
+        rest_minutes: restMinutes ? Number(restMinutes) : null,
+        dropset_enabled: dropsetEnabled,
+        dropset_reps: dropsetEnabled ? dropsetReps.trim() || null : null,
+        dropset_weight: dropsetEnabled
+          ? formatWeightInput(dropsetWeight, weightUnit)
+          : null,
+        notes: notes.trim() || null,
+      });
+    }
 
     setIsSubmitting(false);
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
+      <div className="grid grid-cols-2 gap-2">
+        {([
+          ["strength", "Fuerza"],
+          ["cardio", "Cardio"],
+        ] as const).map(([value, label]) => (
+          <button
+            key={value}
+            type="button"
+            onClick={() => setExerciseKind(value)}
+            className={`min-h-11 rounded-2xl border px-4 text-sm font-semibold transition ${
+              exerciseKind === value
+                ? "border-[#17201a] bg-[#17201a] text-white dark:border-[#dbeafe] dark:bg-[#dbeafe] dark:text-[#0f172a]"
+                : "border-[#d7ded7] bg-white text-[#4d5b50] dark:border-[#31445f] dark:bg-[#172033] dark:text-[#dbe7f6]"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
       <Field
         id="exercise-name"
-        label="Nombre del ejercicio"
+        label={exerciseKind === "cardio" ? "Actividad" : "Nombre del ejercicio"}
         value={name}
         onChange={(event) => setName(event.target.value)}
-        placeholder="Press banca"
+        placeholder={exerciseKind === "cardio" ? "Caminadora" : "Press banca"}
+        list="exercise-catalog"
         required
       />
+      <datalist id="exercise-catalog">
+        {EXERCISE_CATALOG.map((exerciseName) => (
+          <option key={exerciseName} value={exerciseName} />
+        ))}
+      </datalist>
 
-      <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
+      {exerciseKind === "cardio" ? (
         <Field
-          id="sets"
-          label="Series"
-          value={sets}
-          onChange={(event) => setSets(event.target.value)}
+          id="cardio-minutes"
+          label="Tiempo de cardio (min)"
+          value={cardioMinutes}
+          onChange={(event) => setCardioMinutes(event.target.value)}
           type="number"
           min={1}
+          step={1}
           required
         />
-        <Field
-          id="reps"
-          label="Repeticiones"
-          value={reps}
-          onChange={(event) => setReps(event.target.value)}
-          placeholder="10 o 8-12"
-          required
-        />
-        <Field
-          id="weight"
-          label="Peso opcional (kg)"
-          value={weight}
-          onChange={(event) => setWeight(event.target.value)}
-          placeholder="60"
-        />
-        <Field
-          id="rest"
-          label="Descanso (min)"
-          value={restMinutes}
-          onChange={(event) => setRestMinutes(event.target.value)}
-          type="number"
-          min={0}
-          step="0.5"
-          placeholder="1.5"
-        />
-      </div>
-
-      <div className="rounded-2xl border border-[#d9e0d8] bg-white p-4 dark:border-[#334238] dark:bg-[#101711]">
-        <label className="flex items-start gap-3 text-sm font-semibold text-[#354239] dark:text-[#d7e0d8]">
-          <input
-            type="checkbox"
-            checked={dropsetEnabled}
-            onChange={(event) => setDropsetEnabled(event.target.checked)}
-            className="mt-1 size-4 rounded border-[#cfd8cf] accent-[#17201a]"
-          />
-          <span>
-            Dropset
-            <span className="mt-1 block text-xs font-normal leading-5 text-[#647067] dark:text-[#a8b4aa]">
-              Al terminar la serie principal, bajas el peso y sigues sin
-              descanso con otras repeticiones.
-            </span>
-          </span>
-        </label>
-
-        {dropsetEnabled ? (
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+      ) : (
+        <>
+          <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
             <Field
-              id="dropset-reps"
-              label="Repeticiones dropset"
-              value={dropsetReps}
-              onChange={(event) => setDropsetReps(event.target.value)}
-              placeholder="8"
+              id="sets"
+              label="Series"
+              value={sets}
+              onChange={(event) => setSets(event.target.value)}
+              type="number"
+              min={1}
+              required
             />
             <Field
-              id="dropset-weight"
-              label="Peso dropset (kg)"
-              value={dropsetWeight}
-              onChange={(event) => setDropsetWeight(event.target.value)}
-              placeholder="45"
+              id="reps"
+              label="Repeticiones"
+              value={reps}
+              onChange={(event) => setReps(event.target.value)}
+              placeholder="10 o 8-12"
+              required
+            />
+            <Field
+              id="weight"
+              label={`Peso opcional (${weightUnit})`}
+              value={weight}
+              onChange={(event) => setWeight(event.target.value)}
+              placeholder={weightUnit === "kg" ? "60" : "135"}
+            />
+            <Field
+              id="rest"
+              label="Descanso (min)"
+              value={restMinutes}
+              onChange={(event) => setRestMinutes(event.target.value)}
+              type="number"
+              min={0}
+              step="0.5"
+              placeholder="1.5"
             />
           </div>
-        ) : null}
-      </div>
+
+          <div className="rounded-2xl border border-[#d9e0d8] bg-white p-4 dark:border-[#31445f] dark:bg-[#111827]">
+            <label className="flex items-start gap-3 text-sm font-semibold text-[#354239] dark:text-[#dbe7f6]">
+              <input
+                type="checkbox"
+                checked={dropsetEnabled}
+                onChange={(event) => setDropsetEnabled(event.target.checked)}
+                className="mt-1 size-4 rounded border-[#cfd8cf] accent-[#17201a]"
+              />
+              <span>
+                Dropset
+                <span className="mt-1 block text-xs font-normal leading-5 text-[#647067] dark:text-[#b8c6d8]">
+                  Al terminar la serie principal, bajas el peso y sigues sin
+                  descanso con otras repeticiones.
+                </span>
+              </span>
+            </label>
+
+            {dropsetEnabled ? (
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <Field
+                  id="dropset-reps"
+                  label="Repeticiones dropset"
+                  value={dropsetReps}
+                  onChange={(event) => setDropsetReps(event.target.value)}
+                  placeholder="8"
+                />
+                <Field
+                  id="dropset-weight"
+                  label={`Peso dropset (${weightUnit})`}
+                  value={dropsetWeight}
+                  onChange={(event) => setDropsetWeight(event.target.value)}
+                  placeholder={weightUnit === "kg" ? "45" : "100"}
+                />
+              </div>
+            ) : null}
+          </div>
+        </>
+      )}
 
       <TextArea
         id="notes"

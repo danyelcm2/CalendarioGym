@@ -6,6 +6,7 @@ import { Pencil, Plus } from "lucide-react";
 
 import { ExerciseCard } from "@/components/exercises/ExerciseCard";
 import { Button } from "@/components/ui/Button";
+import type { WeightUnit } from "@/lib/utils/weights";
 import type { DayOfWeek, Exercise } from "@/types/exercise";
 
 type DayColumnProps = {
@@ -16,6 +17,7 @@ type DayColumnProps = {
   };
   dayLabel: string;
   exercises: Exercise[];
+  weightUnit: WeightUnit;
   onAdd: (day: DayOfWeek) => void;
   onEdit: (exercise: Exercise) => void;
   onDelete: (exercise: Exercise) => void;
@@ -27,6 +29,7 @@ export function DayColumn({
   day,
   dayLabel,
   exercises,
+  weightUnit,
   onAdd,
   onEdit,
   onDelete,
@@ -46,16 +49,16 @@ export function DayColumn({
       ref={setNodeRef}
       className={`flex min-h-[calc(100svh-18rem)] w-full min-w-0 flex-col rounded-[22px] border p-3 transition sm:p-4 md:min-h-[30rem] ${
         isOver
-          ? "border-[#4f8f7c] bg-[#edf8f5] shadow-[0_18px_50px_rgba(79,143,124,0.16)] dark:bg-[#17322b]"
-          : "border-white/80 bg-white/[0.72] shadow-sm dark:border-[#26342b] dark:bg-[#162019]/[0.72]"
+          ? "border-[#4f8f7c] bg-[#edf8f5] shadow-[0_18px_50px_rgba(79,143,124,0.16)] dark:bg-[#1e3a5f]"
+          : "border-white/80 bg-white/[0.72] shadow-sm dark:border-[#31445f] dark:bg-[#172033]/[0.72]"
       }`}
     >
       <div className="mb-3 flex items-center justify-between gap-3 sm:mb-4">
         <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#7a857d] dark:text-[#a8b4aa]">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#7a857d] dark:text-[#b8c6d8]">
             {day.shortLabel}
           </p>
-          <h2 className="break-words text-lg font-semibold uppercase text-[#17201a] sm:text-xl dark:text-[#f7fbf6]">
+          <h2 className="break-words text-lg font-semibold uppercase text-[#17201a] sm:text-xl dark:text-[#f8fbff]">
             {dayLabel || day.label}
           </h2>
         </div>
@@ -63,13 +66,13 @@ export function DayColumn({
           <button
             type="button"
             onClick={() => onRenameDay(day.value)}
-            className="flex size-9 items-center justify-center rounded-xl text-[#647067] transition hover:bg-[#eef3ef] dark:text-[#a8b4aa] dark:hover:bg-[#223027]"
+            className="flex size-9 items-center justify-center rounded-xl text-[#647067] transition hover:bg-[#eef3ef] dark:text-[#b8c6d8] dark:hover:bg-[#22314a]"
             aria-label={`Cambiar nombre de ${day.label}`}
             title="Cambiar nombre"
           >
             <Pencil size={16} aria-hidden="true" />
           </button>
-          <span className="rounded-full bg-[#edf1ec] px-3 py-1 text-xs font-semibold text-[#4d5b50] dark:bg-[#223027] dark:text-[#d7e0d8]">
+          <span className="rounded-full bg-[#edf1ec] px-3 py-1 text-xs font-semibold text-[#4d5b50] dark:bg-[#22314a] dark:text-[#dbe7f6]">
             {exercises.length}
           </span>
         </div>
@@ -85,13 +88,14 @@ export function DayColumn({
               <ExerciseCard
                 key={exercise.id}
                 exercise={exercise}
+                weightUnit={weightUnit}
                 onEdit={onEdit}
                 onDelete={onDelete}
                 onToggleComplete={onToggleComplete}
               />
             ))
           ) : (
-            <div className="flex min-h-40 flex-1 items-center justify-center rounded-[20px] border border-dashed border-[#cfd8cf] bg-white/[0.46] px-4 text-center text-sm text-[#7a857d] dark:border-[#334238] dark:bg-[#101711]/[0.55] dark:text-[#a8b4aa]">
+            <div className="flex min-h-40 flex-1 items-center justify-center rounded-[20px] border border-dashed border-[#cfd8cf] bg-white/[0.46] px-4 text-center text-sm text-[#7a857d] dark:border-[#31445f] dark:bg-[#111827]/[0.55] dark:text-[#b8c6d8]">
               Sin ejercicios
             </div>
           )}
