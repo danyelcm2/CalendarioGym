@@ -55,7 +55,7 @@ type ModalState =
 function getExercisePrintSummary(exercise: Exercise, weightUnit: WeightUnit) {
   const weightLabel = formatWeightLabel(exercise.weight, weightUnit);
   const dropsetWeightLabel = formatWeightLabel(exercise.dropset_weight, weightUnit);
-  const isCardio = exercise.notes?.toLowerCase().includes("cardio") ?? false;
+  const isCardio = isCardioExercise(exercise);
 
   return [
     isCardio ? `${exercise.reps} cardio` : `${exercise.sets} x ${exercise.reps}`,
@@ -69,6 +69,10 @@ function getExercisePrintSummary(exercise: Exercise, weightUnit: WeightUnit) {
   ]
     .filter(Boolean)
     .join(" · ");
+}
+
+function isCardioExercise(exercise: Exercise) {
+  return exercise.notes?.toLowerCase().includes("cardio") ?? false;
 }
 
 export function WeeklyCalendar({
@@ -448,13 +452,13 @@ export function WeeklyCalendar({
           <div className="mb-3">
             <Link
               href="/plans"
-              className="inline-flex items-center gap-2 rounded-2xl px-1 py-1 text-sm font-semibold text-[#4f8f7c] transition hover:text-[#326d5f] dark:hover:text-[#9ee4d1]"
+              className="inline-flex items-center gap-2 rounded-2xl px-1 py-1 text-sm font-semibold text-[var(--accent)] transition hover:text-[var(--accent-hover)] dark:hover:text-[var(--accent-dark-text)]"
             >
               <ArrowLeft size={17} aria-hidden="true" />
               Mis planes
             </Link>
           </div>
-          <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-[#4f8f7c]">
+          <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-[var(--accent)]">
             <Dumbbell size={17} aria-hidden="true" />
             <span>{status === "saving" ? "Guardando cambios" : "Plan semanal"}</span>
           </div>
@@ -586,13 +590,19 @@ export function WeeklyCalendar({
               <h2>{day.shortLabel} · {dayLabels[day.value] ?? day.label}</h2>
               {groupedExercises[day.value].length > 0 ? (
                 groupedExercises[day.value].map((exercise) => (
-                  <article key={exercise.id}>
+                  <article
+                    key={exercise.id}
+                    className={isCardioExercise(exercise) ? "print-cardio" : ""}
+                  >
                     <h3>
                       {exercise.completed ? "[x] " : ""}
                       {exercise.name}
                     </h3>
                     <p>{getExercisePrintSummary(exercise, weightUnit)}</p>
-                    {exercise.notes ? <p>{exercise.notes}</p> : null}
+                    {exercise.notes &&
+                    exercise.notes.toLowerCase() !== "cardio" ? (
+                      <p>{exercise.notes}</p>
+                    ) : null}
                   </article>
                 ))
               ) : (

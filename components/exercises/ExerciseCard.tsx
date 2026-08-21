@@ -51,10 +51,12 @@ export function ExerciseCard({
     <article
       ref={setNodeRef}
       style={style}
-      className={`group rounded-[18px] border border-[#dfe6df] bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-4 dark:border-[#31445f] dark:bg-[#111827] ${
-        isDragging ? "opacity-45 ring-2 ring-[#4f8f7c]" : ""
-      } ${
-        exercise.completed ? "bg-[#f4fbf6] dark:bg-[#1e3a5f]" : ""
+      className={`group rounded-[18px] border p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-4 ${
+        isCardio
+          ? "border-[#bae6fd] bg-[#f0fbff] dark:border-[#4f9dc3] dark:bg-[#143247]"
+          : "border-[#dfe6df] bg-white dark:border-[#31445f] dark:bg-[#111827]"
+      } ${isDragging ? "opacity-45 ring-2 ring-[var(--accent)]" : ""} ${
+        exercise.completed && !isCardio ? "bg-[#f4fbf6] dark:bg-[#1e3a5f]" : ""
       }`}
     >
       <div className="flex items-start gap-2.5 sm:gap-3">
@@ -64,7 +66,7 @@ export function ExerciseCard({
           className={`mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl border transition sm:size-8 ${
             exercise.completed
               ? "border-[#1f6a3d] bg-[#1f6a3d] text-white dark:border-[#bfdbfe] dark:bg-[#bfdbfe] dark:text-[#0f172a]"
-              : "border-[#cfd8cf] bg-white text-transparent hover:border-[#4f8f7c] dark:border-[#31445f] dark:bg-[#111827]"
+              : "border-[#cfd8cf] bg-white text-transparent hover:border-[var(--accent)] dark:border-[#31445f] dark:bg-[#111827]"
           }`}
           aria-label={
             exercise.completed
@@ -101,7 +103,7 @@ export function ExerciseCard({
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             {weightLabel ? (
-              <span className="rounded-full bg-[#edf7f5] px-2.5 py-1 text-xs font-medium text-[#2b7266] dark:bg-[#1e3a5f] dark:text-[#bfdbfe]">
+              <span className="rounded-full bg-[var(--accent-soft)] px-2.5 py-1 text-xs font-medium text-[var(--accent-hover)] dark:bg-[#1e3a5f] dark:text-[#bfdbfe]">
                 {weightLabel}
               </span>
             ) : null}
@@ -116,7 +118,7 @@ export function ExerciseCard({
               </span>
             ) : null}
             {isCardio ? (
-              <span className="rounded-full bg-[#eff6ff] px-2.5 py-1 text-xs font-medium text-[#1d4ed8] dark:bg-[#1e3a5f] dark:text-[#bfdbfe]">
+              <span className="rounded-full bg-[#dff7ff] px-2.5 py-1 text-xs font-medium text-[#036989] dark:bg-[#0f4b64] dark:text-[#bae6fd]">
                 Cardio
               </span>
             ) : null}

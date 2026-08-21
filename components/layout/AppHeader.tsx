@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Dumbbell, LogOut } from "lucide-react";
 
 import { Button } from "@/components/ui/Button";
+import { AccentColorPicker } from "@/components/ui/AccentColorPicker";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { WeightUnitToggle } from "@/components/ui/WeightUnitToggle";
 import { createClient } from "@/lib/supabase/client";
@@ -56,6 +57,7 @@ export function AppHeader({
               @{username || email}
             </p>
           </div>
+          <AccentColorPicker />
           <WeightUnitToggle />
           <ThemeToggle />
           <Button

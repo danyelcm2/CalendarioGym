@@ -32,6 +32,18 @@ function getCardioMinutes(exercise?: Exercise | null) {
   return match ? match[0] : "20";
 }
 
+function normalizeSearch(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+function getMatchIndex(name: string, query: string) {
+  return normalizeSearch(name).indexOf(query);
+}
+
 export function ExerciseForm({
   exercise,
   catalog,
@@ -63,7 +75,7 @@ export function ExerciseForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCatalogOpen, setIsCatalogOpen] = useState(false);
   const filteredCatalog = useMemo(() => {
-    const query = name.trim().toLowerCase();
+    const query = normalizeSearch(name);
     const kindCatalog = catalog.filter((item) =>
       exerciseKind === "cardio"
         ? item.category === "cardio"
@@ -75,9 +87,19 @@ export function ExerciseForm({
     }
 
     return kindCatalog
-      .filter((item) => item.name.toLowerCase().includes(query))
+      .map((item) => ({
+        item,
+        matchIndex: getMatchIndex(item.name, query),
+      }))
+      .filter(({ matchIndex }) => matchIndex >= 0)
+      .sort(
+        (a, b) =>
+          a.matchIndex - b.matchIndex || a.item.name.localeCompare(b.item.name),
+      )
+      .map(({ item }) => item)
       .slice(0, 12);
   }, [catalog, exerciseKind, name]);
+  const hasCatalogQuery = name.trim().length > 0;
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -159,22 +181,28 @@ export function ExerciseForm({
             required
           />
         </label>
-        {isCatalogOpen && filteredCatalog.length > 0 ? (
+        {isCatalogOpen && (filteredCatalog.length > 0 || hasCatalogQuery) ? (
           <div className="absolute left-0 right-0 top-full z-40 mt-2 max-h-64 overflow-y-auto rounded-2xl border border-[#d7ded7] bg-white p-1 shadow-[0_18px_45px_rgba(23,32,26,0.16)] dark:border-[#31445f] dark:bg-[#111827]">
-            {filteredCatalog.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onMouseDown={(event) => {
-                  event.preventDefault();
-                  setName(item.name);
-                  setIsCatalogOpen(false);
-                }}
-                className="block min-h-11 w-full rounded-xl px-3 text-left text-sm font-medium text-[#17201a] transition hover:bg-[#eef3ef] dark:text-[#f8fbff] dark:hover:bg-[#22314a]"
-              >
-                {item.name}
-              </button>
-            ))}
+            {filteredCatalog.length > 0 ? (
+              filteredCatalog.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onMouseDown={(event) => {
+                    event.preventDefault();
+                    setName(item.name);
+                    setIsCatalogOpen(false);
+                  }}
+                  className="block min-h-11 w-full rounded-xl px-3 text-left text-sm font-medium text-[#17201a] transition hover:bg-[#eef3ef] dark:text-[#f8fbff] dark:hover:bg-[#22314a]"
+                >
+                  {item.name}
+                </button>
+              ))
+            ) : (
+              <div className="px-3 py-3 text-sm leading-5 text-[#647067] dark:text-[#b8c6d8]">
+                No hay coincidencias. Puedes guardar este ejercicio nuevo.
+              </div>
+            )}
           </div>
         ) : null}
       </div>

@@ -337,7 +337,7 @@ export function PlansDashboard({ userId }: PlansDashboardProps) {
     <section className="mx-auto max-w-[1400px] px-3 py-5 sm:px-5 md:px-8 md:py-8">
       <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <p className="mb-2 text-sm font-semibold text-[#4f8f7c]">
+          <p className="mb-2 text-sm font-semibold text-[var(--accent)]">
             Mis planes
           </p>
           <h2 className="text-3xl font-semibold text-[#17201a] dark:text-[#f8fbff]">
@@ -365,7 +365,7 @@ export function PlansDashboard({ userId }: PlansDashboardProps) {
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#4f8f7c] dark:text-[#93c5fd]">
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--accent)] dark:text-[#93c5fd]">
                   {template.level}
                 </p>
                 <h3 className="mt-1 text-base font-semibold text-[#17201a] dark:text-[#f8fbff]">

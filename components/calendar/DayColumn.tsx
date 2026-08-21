@@ -49,7 +49,7 @@ export function DayColumn({
       ref={setNodeRef}
       className={`flex min-h-[calc(100svh-18rem)] w-full min-w-0 flex-col rounded-[22px] border p-3 transition sm:p-4 md:min-h-[30rem] ${
         isOver
-          ? "border-[#4f8f7c] bg-[#edf8f5] shadow-[0_18px_50px_rgba(79,143,124,0.16)] dark:bg-[#1e3a5f]"
+          ? "border-[var(--accent)] bg-[var(--accent-soft)] shadow-[0_18px_50px_rgba(79,143,124,0.16)] dark:bg-[#1e3a5f]"
           : "border-white/80 bg-white/[0.72] shadow-sm dark:border-[#31445f] dark:bg-[#172033]/[0.72]"
       }`}
     >

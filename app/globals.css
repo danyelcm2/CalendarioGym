@@ -5,6 +5,12 @@
 :root {
   --background: #f7f8f5;
   --foreground: #17201a;
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-soft: #eff6ff;
+  --accent-soft-strong: #dbeafe;
+  --accent-soft-dark: #1e3a5f;
+  --accent-dark-text: #bfdbfe;
 }
 
 :root.dark {
@@ -21,7 +27,7 @@ body {
   margin: 0;
   overflow-x: hidden;
   background:
-    radial-gradient(circle at top left, rgba(20, 184, 166, 0.11), transparent 32rem),
+    radial-gradient(circle at top left, color-mix(in srgb, var(--accent) 13%, transparent), transparent 32rem),
     linear-gradient(180deg, #fbfbf7 0%, var(--background) 52%, #eef3ef 100%);
   color: var(--foreground);
   font-family:
@@ -31,7 +37,7 @@ body {
 
 .dark body {
   background:
-    radial-gradient(circle at top left, rgba(96, 165, 250, 0.18), transparent 30rem),
+    radial-gradient(circle at top left, color-mix(in srgb, var(--accent) 22%, transparent), transparent 30rem),
     linear-gradient(180deg, #1b2b42 0%, var(--background) 58%, #111827 100%);
 }
 
@@ -42,8 +48,8 @@ textarea {
 }
 
 ::selection {
-  background: #c6f6e9;
-  color: #0f2a22;
+  background: var(--accent-soft-strong);
+  color: #0f172a;
 }
 
 .print-plan {
@@ -51,9 +57,16 @@ textarea {
 }
 
 @media print {
+  @page {
+    size: A4 landscape;
+    margin: 8mm;
+  }
+
   body {
     background: white !important;
     color: #111827 !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
   }
 
   header,
@@ -68,51 +81,77 @@ textarea {
 
   .print-plan {
     display: block;
-    padding: 0;
+    min-height: calc(100vh - 16mm);
+    border: 1px solid #dbe3ef;
+    border-radius: 18px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #f8fbff 0%, #eef6ff 100%);
+    padding: 12px;
   }
 
   .print-plan h1 {
-    margin: 0 0 4px;
-    font-size: 28px;
-    line-height: 1.15;
+    margin: 0;
+    color: #0f172a;
+    font-size: 22px;
+    line-height: 1.05;
   }
 
   .print-plan > p {
-    margin: 0 0 18px;
-    color: #4b5563;
+    margin: 4px 0 10px;
+    color: #475569;
+    font-size: 10px;
+    font-weight: 600;
   }
 
   .print-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 7px;
   }
 
   .print-grid section {
     break-inside: avoid;
-    border: 1px solid #d1d5db;
+    border: 1px solid #dbe3ef;
     border-radius: 12px;
-    padding: 12px;
+    background: rgba(255, 255, 255, 0.88);
+    padding: 7px;
   }
 
   .print-grid h2 {
-    margin: 0 0 10px;
-    font-size: 16px;
+    margin: 0 0 5px;
+    border-radius: 9px;
+    background: var(--accent-soft-strong);
+    color: #1e3a8a;
+    padding: 5px 6px;
+    font-size: 10px;
+    line-height: 1.15;
   }
 
   .print-grid article {
-    border-top: 1px solid #e5e7eb;
-    padding: 8px 0;
+    margin-top: 4px;
+    break-inside: avoid;
+    border: 1px solid #e5edf7;
+    border-radius: 9px;
+    background: white;
+    padding: 5px 6px;
+  }
+
+  .print-grid article.print-cardio {
+    border-color: #bae6fd;
+    background: #f0fbff;
   }
 
   .print-grid h3 {
     margin: 0;
-    font-size: 13px;
+    color: #0f172a;
+    font-size: 8.8px;
+    line-height: 1.18;
   }
 
   .print-grid p {
-    margin: 3px 0 0;
-    color: #4b5563;
-    font-size: 12px;
+    margin: 2px 0 0;
+    color: #475569;
+    font-size: 7.8px;
+    line-height: 1.2;
   }
 }
